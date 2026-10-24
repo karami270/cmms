@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>داشبورد مدیریت دستورکارهای CMMS</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6255D6">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --radius-sm:12px; --radius-md:16px; --radius-lg:20px;
+  --shadow-sm:0 4px 14px rgba(109,95,216,.07);
+  --shadow-md:0 10px 28px rgba(109,95,216,.10);
+  --line:#ECEEF7; --ink:#262A3D; --ink-soft:#5B6472; --muted:#8792A6;
+  --paper:#F1F2FA; --surface:#FFFFFF; --surface-alt:#F6F5FC;
+  --purple:#7C6FE8; --purple-dark:#6255D6; --purple-tint:#EFEDFC;
+  --green:#16A34A; --red:#DC2626; --orange:#D97706; --teal:#14B8A6; --blue:#2563EB;
+  --nw:#4F46E5; --ne:#0D9488; --sw:#D97706; --se:#E11D48; --fallback:#64748B;
+  --sans:'Vazirmatn',Tahoma,Arial,sans-serif;
+  --input-border:#D9DCEF; --upload-dash:#C9C0F5;
+  --tab-strip-bg:#E9E7FA; --tab-hover-bg:#FBFAFF;
+}
+body.dark{
+  --line:#333A57; --ink:#EDEFF9; --ink-soft:#B9BFD6; --muted:#8791AC;
+  --paper:#12141F; --surface:#1B1E2E; --surface-alt:#242840;
+  --purple:#8B7FF0; --purple-dark:#7367E8; --purple-tint:#262646;
+  --input-border:#3C4160; --upload-dash:#4B4480;
+  --tab-strip-bg:#242840; --tab-hover-bg:#2A2E48;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;font-family:var(--sans);background:var(--paper);color:var(--ink);direction:rtl;}
+.container{max-width:1600px;margin:0 auto;padding:16px 20px 40px;}
+
+.hero{background:linear-gradient(90deg,var(--purple-dark) 0%,var(--purple) 60%,#9B8FF2 100%);color:#fff;border-radius:var(--radius-md);padding:16px 22px 0;margin-bottom:18px;box-shadow:var(--shadow-md);}
+.hero-top{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-bottom:16px;flex-wrap:wrap;}
+.hero h1{margin:0;font-size:1.28rem;line-height:1.5;font-weight:800;}
+.hero p{margin:4px 0 0;font-size:.84rem;font-weight:500;color:rgba(255,255,255,.8);line-height:1.7;}
+.hero-status{font-size:.74rem;font-weight:600;color:rgba(255,255,255,.85);background:rgba(255,255,255,.16);border-radius:999px;padding:6px 13px;white-space:nowrap;}
+.hero-rail{display:flex;height:5px;border-radius:0 0 var(--radius-md) var(--radius-md);overflow:hidden;}
+.hero-rail span{flex:1;}
+
+.toolbar{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
+.tool-card{background:var(--surface);border-radius:var(--radius-md);padding:12px 14px;box-shadow:var(--shadow-sm);flex:1 1 220px;min-width:180px;}
+.tool-card label{display:block;font-size:.8rem;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+.tool-card input[type="text"]{width:100%;min-height:42px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--surface-alt);color:var(--ink);font-size:1rem;font-weight:700;text-align:center;direction:ltr;padding:8px 10px;font-family:var(--sans);}
+.tool-card input[type="text"]:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,111,232,.14);}
+.tool-card input[type="number"]{width:100%;min-height:42px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--surface-alt);color:var(--ink);font-size:1rem;font-weight:700;text-align:center;padding:8px 10px;font-family:var(--sans);}
+.upload-card{position:relative;overflow:hidden;}
+.upload-card input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2;}
+.upload-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;border:1.5px dashed var(--upload-dash);border-radius:10px;background:var(--purple-tint);color:var(--purple-dark);font-weight:800;font-size:.9rem;cursor:pointer;padding:8px;}
+.upload-btn:hover{background:rgba(124,111,232,.16);}
+.btn-theme{min-height:42px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700;font-size:.88rem;cursor:pointer;padding:0 16px;font-family:var(--sans);width:100%;}
+.btn-theme:hover{border-color:var(--purple);}
+.file-info{font-size:.76rem;color:var(--green);margin-top:6px;font-weight:600;}
+.range-hint{font-size:.74rem;color:var(--muted);margin-bottom:16px;line-height:1.6;}
+
+.filters{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.filter-card{background:var(--surface);border-radius:var(--radius-md);padding:10px 12px;box-shadow:var(--shadow-sm);flex:1 1 180px;min-width:160px;}
+.filter-card label{display:block;font-size:.78rem;font-weight:700;color:var(--ink-soft);margin-bottom:5px;}
+.filter-card select{width:100%;min-height:38px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--surface-alt);color:var(--ink);font-size:.86rem;font-weight:600;padding:6px 10px;font-family:var(--sans);cursor:pointer;}
+.filter-card select:focus{outline:none;border-color:var(--purple);}
+.filter-reset{display:flex;align-items:flex-end;}
+.filter-reset button{min-height:38px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--red);font-weight:800;font-size:.82rem;cursor:pointer;padding:0 14px;font-family:var(--sans);}
+.filter-reset button:hover{border-color:var(--red);background:rgba(220,38,38,.06);}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:12px 0 18px;}
+.kpi-grid-4{grid-template-columns:repeat(4,minmax(0,1fr));}
+.kpi-card{background:var(--surface);border-radius:var(--radius-md);padding:16px 12px 14px;min-height:148px;box-shadow:var(--shadow-sm);text-align:center;}
+.kpi-ring{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;background:conic-gradient(var(--ring-color,var(--purple)) calc(var(--pct,70)*1%),var(--line) 0);}
+.kpi-ring-inner{width:54px;height:54px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;}
+.kpi-value{font-size:.95rem;font-weight:800;color:var(--ink);direction:ltr;}
+.kpi-label{color:var(--ink-soft);font-size:.8rem;font-weight:700;margin-bottom:3px;line-height:1.6;}
+.kpi-sub{color:var(--muted);font-size:.7rem;font-weight:500;line-height:1.6;}
+
+.status-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 16px;}
+.status-item{background:var(--surface);border-radius:var(--radius-sm);padding:10px 13px;color:var(--ink-soft);font-size:.78rem;box-shadow:var(--shadow-sm);}
+.status-item b{color:var(--purple-dark);font-weight:700;}
+
+.section-title{color:var(--ink);font-size:1.03rem;font-weight:800;border-right:3px solid var(--purple);padding-right:10px;margin:18px 0 10px;line-height:1.6;}
+.section-note{color:var(--muted);font-size:.8rem;margin:-6px 0 10px;line-height:1.6;}
+
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:18px;}
+.chart-card{background:var(--surface);border-radius:var(--radius-md);padding:14px 16px 16px;box-shadow:var(--shadow-sm);min-width:0;}
+.chart-card.wide{grid-column:1/-1;}
+.chart-title{font-size:.94rem;font-weight:800;color:var(--ink);margin:0 0 10px;padding-right:9px;border-right:3px solid var(--purple);line-height:1.6;}
+.chart-wrap{position:relative;height:320px;min-width:0;}
+.chart-wrap.tall{height:460px;}
+.chart-wrap.xtall{height:600px;}
+
+.focus-grid{display:grid;grid-template-columns:repeat(3,minmax(220px,290px));justify-content:center;gap:14px;margin:10px 0 18px;}
+.focus-card{background:var(--surface);border-radius:var(--radius-md);padding:14px 16px;min-height:110px;box-shadow:var(--shadow-sm);}
+.focus-label{color:var(--muted);font-size:.82rem;font-weight:700;line-height:1.6;margin-bottom:6px;}
+.focus-value{color:var(--ink);font-size:1.18rem;font-weight:800;line-height:1.4;margin-bottom:3px;}
+.focus-detail{color:var(--ink-soft);font-size:.82rem;font-weight:600;line-height:1.7;}
+.focus-low{border-right:4px solid #F43F5E;}
+.focus-high{border-right:4px solid #22C55E;}
+
+.region-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.region-card{background:var(--surface);border-radius:var(--radius-md);padding:14px 16px;box-shadow:var(--shadow-sm);border-top:3px solid var(--quadrant,var(--purple));}
+.region-name{font-weight:800;color:var(--ink);margin-bottom:8px;font-size:.95rem;}
+.region-line{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;color:var(--ink-soft);font-size:.88rem;font-weight:600;margin-top:6px;line-height:1.7;}
+.region-line b{color:var(--ink);}
+
+.tab-strip{display:flex;gap:8px;background:var(--tab-strip-bg);border-radius:var(--radius-md);padding:8px;margin:10px 0 16px;flex-wrap:wrap;}
+.tab-btn{background:var(--surface);border:none;border-radius:var(--radius-sm);padding:10px 16px;min-height:44px;color:var(--ink-soft);font-weight:700;font-size:.88rem;cursor:pointer;font-family:var(--sans);transition:all .2s;}
+.tab-btn:hover{background:var(--tab-hover-bg);}
+.tab-btn.active{background:linear-gradient(135deg,var(--purple-dark) 0%,var(--purple) 100%);color:#fff;box-shadow:var(--shadow-sm);}
+.tab-panel{background:var(--surface);border-radius:var(--radius-md);padding:16px 16px 8px;box-shadow:var(--shadow-sm);}
+.tab-panel.hidden{display:none;}
+
+.table-card{background:var(--surface);border-radius:var(--radius-md);padding:14px 16px;box-shadow:var(--shadow-sm);margin-bottom:18px;}
+.table-head{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.table-head .chart-title{margin:0;}
+.table-search{min-height:36px;border:1.5px solid var(--input-border);border-radius:10px;background:var(--surface-alt);color:var(--ink);font-size:.86rem;padding:6px 12px;font-family:var(--sans);min-width:220px;}
+.table-search:focus{outline:none;border-color:var(--purple);}
+.table-wrap{max-height:480px;overflow:auto;border:1px solid var(--line);border-radius:var(--radius-sm);}
+table.data-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.84rem;}
+table.data-table thead th{position:sticky;top:0;z-index:4;background:var(--purple-dark);color:#fff;font-weight:800;text-align:center;padding:10px 8px;border-left:1px solid rgba(255,255,255,.18);white-space:nowrap;font-size:.8rem;}
+table.data-table tbody td{text-align:center;padding:8px 8px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--ink);}
+table.data-table tbody tr:nth-child(odd) td{background:var(--surface-alt);}
+table.data-table tbody tr:hover td{background:var(--purple-tint);}
+table.data-table th:last-child,table.data-table td:last-child{border-left:none;}
+.table-count{font-size:.76rem;color:var(--muted);font-weight:600;}
+.badge-end{display:inline-block;background:#E3F8EA;color:#17915A;border-radius:999px;padding:2px 10px;font-size:.74rem;font-weight:700;}
+.badge-open{display:inline-block;background:#FCEEDA;color:#C2650C;border-radius:999px;padding:2px 10px;font-size:.74rem;font-weight:700;}
+.empty-msg{text-align:center;padding:26px;color:var(--muted);font-size:.88rem;}
+
+.alert-card{background:var(--surface);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow-sm);}
+.alert-card.red{border-right:4px solid #F43F5E;}
+.alert-card.orange{border-right:4px solid #F59E0B;}
+.alert-title{font-weight:800;color:var(--ink);font-size:.9rem;}
+.alert-detail{color:var(--muted);font-size:.8rem;margin-top:3px;}
+
+.btn{min-height:38px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-weight:700;font-size:.84rem;cursor:pointer;padding:0 14px;font-family:var(--sans);}
+.btn:hover{border-color:var(--purple);}
+.btn-primary{background:linear-gradient(135deg,var(--purple-dark) 0%,var(--purple) 100%);color:#fff;border:none;}
+.btn-primary:hover{opacity:.92;}
+
+@media(max-width:1050px){
+  .kpi-grid,.kpi-grid-4{grid-template-columns:repeat(2,1fr);}
+  .region-grid{grid-template-columns:repeat(2,1fr);}
+  .focus-grid{grid-template-columns:repeat(2,minmax(200px,290px));}
+  .status-strip{grid-template-columns:repeat(2,1fr);}
+  .charts-grid{grid-template-columns:1fr;}
+  .hero h1{font-size:1.1rem;}
+}
+@media(max-width:650px){
+  .kpi-grid,.kpi-grid-4,.region-grid,.status-strip{grid-template-columns:1fr;}
+  .focus-grid{grid-template-columns:1fr;}
+  .hero h1{font-size:.98rem;}
+  .tab-btn{padding:8px 12px;font-size:.8rem;}
+}
+
+/* ===== افزوده‌های نسخه دو‌فایله (همسان با CMMS_Dashboard v5.10.3) ===== */
+.hidden{display:none !important;}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.upload-title{font-size:.86rem;font-weight:800;color:var(--ink);margin-bottom:7px;}
+.upload-title small{color:var(--muted);font-weight:600;font-size:.74rem;}
+.upload-card .file-info.err{color:var(--red);}
+.file-warn{font-size:.76rem;color:var(--orange);margin-top:6px;font-weight:600;line-height:1.7;}
+.info-box,.warn-box,.err-box{border-radius:var(--radius-sm);padding:12px 16px;margin:10px 0;font-size:.86rem;line-height:1.9;font-weight:600;}
+.info-box{background:var(--purple-tint);color:var(--purple-dark);}
+.warn-box{background:rgba(217,119,6,.12);color:var(--orange);}
+.err-box{background:rgba(220,38,38,.10);color:var(--red);}
+.ok-box{background:rgba(22,163,74,.10);color:var(--green);border-radius:var(--radius-sm);padding:10px 14px;margin:8px 0;font-size:.84rem;font-weight:700;}
+.check-row{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:var(--ink-soft);margin-bottom:7px;cursor:pointer;}
+.check-row input{width:16px;height:16px;accent-color:var(--purple);}
+.tool-card .sub-chip{font-size:.72rem;color:var(--muted);margin-top:6px;line-height:1.6;font-weight:600;}
+.tool-card input[type="number"]:disabled{opacity:.5;}
+.ms{position:relative;}
+.ms-btn{width:100%;min-height:38px;border-radius:10px;border:1.5px solid var(--input-border);background:var(--surface-alt);color:var(--ink);font-size:.86rem;font-weight:600;padding:6px 10px;font-family:var(--sans);cursor:pointer;text-align:right;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.ms-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ms.open .ms-btn,.ms-btn:hover{border-color:var(--purple);}
+.ms-panel{position:absolute;z-index:40;top:calc(100% + 4px);right:0;left:0;min-width:200px;max-height:300px;overflow:auto;background:var(--surface);border:1.5px solid var(--input-border);border-radius:10px;box-shadow:var(--shadow-md);display:none;padding:6px;}
+.ms.open .ms-panel{display:block;}
+.ms-item{display:flex;gap:8px;align-items:center;padding:6px 8px;border-radius:8px;font-size:.84rem;cursor:pointer;font-weight:600;}
+.ms-item:hover{background:var(--purple-tint);}
+.ms-item input{accent-color:var(--purple);}
+.ms-empty{padding:10px;color:var(--muted);font-size:.82rem;text-align:center;}
+.ms-clear{display:block;width:100%;border:none;background:transparent;color:var(--red);font-family:var(--sans);font-weight:800;font-size:.78rem;padding:6px;cursor:pointer;border-bottom:1px solid var(--line);margin-bottom:4px;}
+.fstrip{margin:4px 0 14px;}
+.badge{display:inline-block;border-radius:999px;padding:3px 12px;font-size:.76rem;font-weight:700;margin-left:6px;}
+.badge-blue{background:#E5EBFB;color:#2952D9;}
+.badge-green{background:#E3F8EA;color:#17915A;}
+.badge-orange{background:#FCEEDA;color:#C2650C;}
+.badge-gray{background:var(--purple-tint);color:var(--purple-dark);}
+body.dark .badge-blue{background:#232B52;color:#9DB2FF;}
+body.dark .badge-green{background:#17352A;color:#6EE7A8;}
+body.dark .badge-orange{background:#3B2A14;color:#FBBF77;}
+.sub-title{color:var(--ink);font-size:1.03rem;font-weight:800;margin:18px 0 8px;line-height:1.6;}
+.caption{color:var(--muted);font-size:.78rem;line-height:1.8;margin:6px 0 14px;font-weight:500;}
+.grid-145{grid-template-columns:1.45fr .75fr;}
+.grid-21{grid-template-columns:2fr 1fr;}
+.grid-3{grid-template-columns:1fr 1fr .8fr;}
+.grid-082{grid-template-columns:.82fr 1.45fr;}
+.grid-defect-top{grid-template-columns:1.45fr 1fr;}
+details.expander{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:14px;padding:4px 14px;}
+details.expander summary{cursor:pointer;font-weight:800;padding:10px 0;color:var(--ink);}
+.note-strong{font-weight:800;color:var(--ink);}
+.table-note{font-size:.8rem;color:var(--muted);margin:2px 0 10px;line-height:1.8;}
+table.data-table tbody tr.total-row td{background:var(--purple-tint) !important;font-weight:800;}
+.alert-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.sticky-first td:first-child,.sticky-first th:first-child{white-space:nowrap;}
+@media(max-width:1050px){
+  .upload-grid{grid-template-columns:1fr;}
+  .grid-145,.grid-21,.grid-3,.grid-082,.grid-defect-top,.alert-grid{grid-template-columns:1fr;}
+}
+
+details.filters-fold{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);margin-bottom:14px;padding:0 14px;}
+details.filters-fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:11px 0;font-weight:800;color:var(--ink);}
+details.filters-fold>summary::-webkit-details-marker{display:none;}
+.ff-title{white-space:nowrap;}
+.ff-sum{flex:1;min-width:0;font-size:.78rem;font-weight:600;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ff-arrow{transition:transform .2s;color:var(--purple);font-style:normal;}
+details.filters-fold[open] .ff-arrow{transform:rotate(180deg);}
+details.filters-fold[open]>summary{border-bottom:1px solid var(--line);margin-bottom:12px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="fatalBox" class="err-box hidden" style="direction:ltr;text-align:left;white-space:pre-wrap;font-family:monospace;font-size:.78rem"></div>
+
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <h1>داشبورد استقرار فرآیند مدیریت دارایی‌های فیزیکی در سطوح عملیاتی</h1>
+        <p>پایش مدیریتی عملکرد معاونت‌ها و مناطق در نرم‌افزار CMMS</p>
+      </div>
+      <div class="hero-status" id="heroStatus">CMMS</div>
+    </div>
+    <div class="hero-rail">
+      <span style="background:var(--nw)"></span>
+      <span style="background:var(--ne)"></span>
+      <span style="background:var(--sw)"></span>
+      <span style="background:var(--se)"></span>
+    </div>
+  </div>
+
+  <div class="upload-grid">
+    <div class="tool-card upload-card">
+      <div class="upload-title">فایل اول: گزارش زمان‌بندی</div>
+      <div class="upload-btn">📂 انتخاب فایل Excel</div>
+      <input type="file" id="filePrimary" accept=".xlsx,.xls,.xlsm">
+      <div class="file-info" id="infoPrimary"></div>
+    </div>
+    <div class="tool-card upload-card">
+      <div class="upload-title">فایل پروژه‌های تعمیراتی <small>(اختیاری — فقط برای تب «تحلیل دستورکارها بر اساس عیوب»)</small></div>
+      <div class="upload-btn">📂 انتخاب فایل Excel</div>
+      <input type="file" id="fileProjects" accept=".xlsx,.xls,.xlsm">
+      <div class="file-info" id="infoProjects"></div>
+    </div>
+  </div>
+
+  <div class="info-box" id="introBox">
+    برای شروع، فایل <b>گزارش زمان‌بندی</b> را بارگذاری کنید. فایل <b>پروژه‌های تعمیراتی</b> کنارش اختیاری است.<br>
+    <b>مدل دو‌فایله:</b> همه تب‌ها از «گزارش زمان‌بندی» ساخته می‌شوند، به‌جز تب «تحلیل دستورکارها بر اساس عیوب» که فقط از «پروژه‌های تعمیراتی» می‌خواند.
+    بازه زمانی گزارش زمان‌بندی با «تاریخ زمانبندی اجرا» و پروژه‌های تعمیراتی با «تاریخ ابلاغ به اکیپ اجرا» اعمال می‌شود. «نام امور» در هر دو فایل مشترک است و فیلترهای معاونت/منطقه/مرحله/نوع پرونده روی هر دو اعمال می‌شود.
+  </div>
+
+  <div id="appBody" class="hidden">
+
+    <details class="filters-fold" id="filtersFold">
+      <summary><span class="ff-title">🎛️ فیلترها و تنظیمات</span><span class="ff-sum" id="filtersSummary"></span><i class="ff-arrow">▾</i></summary>
+    <div class="toolbar">
+      <div class="tool-card"><label>📅 از تاریخ</label><input type="text" id="dateFrom" placeholder="1405/01/01" inputmode="numeric"></div>
+      <div class="tool-card"><label>📅 تا تاریخ</label><input type="text" id="dateTo" placeholder="1405/06/31" inputmode="numeric"></div>
+      <div class="tool-card">
+        <label>🗓️ تعداد روز گزارش</label>
+        <label class="check-row"><input type="checkbox" id="daysAuto" checked> از تاریخ داده‌ها</label>
+        <input type="number" id="daysManual" value="30" min="1" max="3660" step="1">
+        <div class="sub-chip" id="daysChip"></div>
+      </div>
+      <div class="tool-card"><label>👷 تعداد اکیپ هر منطقه</label><input type="number" id="teamsPerRegion" value="3" min="1" max="50" step="1"></div>
+      <div class="tool-card"><label>🎯 دستورکار روزانه هر اکیپ</label><input type="number" id="ordersPerTeam" value="2" min="1" max="50" step="1"><div class="sub-chip" id="targetChip"></div></div>
+      <div class="tool-card"><label>⚠️ حد هشدار نرخ پایان (%)</label><input type="number" id="alertThreshold" value="70" min="0" max="100" step="1"></div>
+      <div class="tool-card"><label>🎨 تم</label><button class="btn-theme" id="themeBtn">🌙 حالت تاریک</button></div>
+    </div>
+    <div class="range-hint" id="rangeHint"></div>
+
+    <div class="filters">
+      <div class="filter-card"><label>معاونت</label><div class="ms" id="ms-regions"><button type="button" class="ms-btn"><span>همه معاونت‌ها</span><i>▾</i></button><div class="ms-panel"></div></div></div>
+      <div class="filter-card"><label>منطقه</label><div class="ms" id="ms-affairs"><button type="button" class="ms-btn"><span>همه مناطق</span><i>▾</i></button><div class="ms-panel"></div></div></div>
+      <div class="filter-card"><label>مرحله فعلی</label><div class="ms" id="ms-stages"><button type="button" class="ms-btn"><span>همه مراحل</span><i>▾</i></button><div class="ms-panel"></div></div></div>
+      <div class="filter-card" id="caseFilterCard"><label>نوع پرونده</label><div class="ms" id="ms-cases"><button type="button" class="ms-btn"><span>همه انواع</span><i>▾</i></button><div class="ms-panel"></div></div></div>
+      <div class="filter-reset"><button id="resetFilters">↺ حذف فیلترها</button></div>
+    </div>
+    </details>
+
+    <div id="notices"></div>
+    <div id="emptyState" class="warn-box hidden"></div>
+
+    <div id="mainTabs">
+      <div class="tab-strip" id="tabStrip">
+        <button class="tab-btn active" data-tab="overview">نمای کلی</button>
+        <button class="tab-btn" data-tab="regions">تحلیل دستورکار بر اساس معاونت‌های امور مناطق</button>
+        <button class="tab-btn" data-tab="affairs">تحلیل دستورکار به تفکیک مناطق</button>
+        <button class="tab-btn" data-tab="open">دستورکارهای باز</button>
+        <button class="tab-btn" data-tab="caseType">تحلیل دستورکار بر اساس نوع پرونده</button>
+        <button class="tab-btn" data-tab="defects">تحلیل دستورکارها بر اساس عیوب</button>
+        <button class="tab-btn" data-tab="export">خروجی گزارش</button>
+      </div>
+
+      <!-- ============ نمای کلی ============ -->
+      <div class="tab-panel" id="panel-overview">
+        <div class="kpi-grid" id="kpiGrid"></div>
+        <div class="fstrip" data-fstrip></div>
+        <div class="section-note">نمای اجرایی از حجم کار، وضعیت پایان و توزیع دستورکارها در سطح معاونت‌ها.</div>
+        <div class="focus-grid" id="focusHigh"></div>
+        <div class="focus-grid" id="focusLow"></div>
+        <div class="section-title">نمودار جایگاه معاونت‌ها بر اساس شاخص‌های اصلی</div>
+        <div class="section-note">نمودار میله‌ای ساده بر پایه امتیاز رتبه‌ای معاونت‌ها است؛ هرچه امتیاز بیشتر باشد، عملکرد بهتر است.</div>
+        <div class="charts-grid"><div class="chart-card wide"><div class="chart-wrap tall"><canvas id="chart17"></canvas></div></div></div>
+        <div class="section-title">نمودار رتبه نهایی مناطق بر اساس شاخص‌های اصلی</div>
+        <div class="section-note">نمودار میله‌ای ساده بر پایه امتیاز رتبه‌ای مناطق است؛ هرچه امتیاز بیشتر باشد، عملکرد بهتر است.</div>
+        <div class="charts-grid"><div class="chart-card wide"><div class="chart-wrap xtall"><canvas id="chart16"></canvas></div></div></div>
+        <div class="section-title">نمودار روند تعداد دستورکارها بر اساس تاریخ زمانبندی اجرا</div>
+        <div class="info-box hidden" id="chart18Info"></div>
+        <div class="charts-grid" id="chart18Wrap"><div class="chart-card wide"><div class="chart-wrap tall"><canvas id="chart18"></canvas></div></div></div>
+        <div class="section-title">هشدارهای مدیریتی</div>
+        <div class="alert-grid">
+          <div class="chart-card"><h3 class="chart-title">مناطق با کمترین نرخ دستورکار پایان</h3><div id="alertLow"></div></div>
+          <div class="chart-card"><h3 class="chart-title">مناطق با بیشترین نرخ دستورکار باز</h3><div id="alertOpen"></div></div>
+        </div>
+      </div>
+
+      <!-- ============ معاونت‌ها ============ -->
+      <div class="tab-panel hidden" id="panel-regions">
+        <div class="fstrip" data-fstrip></div>
+        <div class="sub-title">تصویر مدیریتی معاونت‌ها</div>
+        <div class="region-grid" id="regionCards"></div>
+        <div class="charts-grid grid-145">
+          <div class="chart-card"><h3 class="chart-title">نمودار مقایسه دستورکارهای ثبت شده و پایان یافته به تفکیک معاونت</h3><div class="chart-wrap tall"><canvas id="chart01"></canvas></div></div>
+          <div class="chart-card"><h3 class="chart-title">نمودار سهم دستورکارها به تفکیک معاونت‌های امور مناطق</h3><div class="chart-wrap tall"><canvas id="chart13"></canvas></div></div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card"><h3 class="chart-title">متوسط روزانه به تفکیک معاونت</h3><div class="chart-wrap"><canvas id="chart11"></canvas></div></div>
+          <div class="chart-card"><h3 class="chart-title">نرخ پایان به تفکیک معاونت</h3><div class="chart-wrap"><canvas id="chart12"></canvas></div></div>
+        </div>
+        <div class="sub-title">رتبه‌بندی معاونت‌ها بر اساس عملکرد دستورکار</div>
+        <div class="section-note" id="regionRankNote"></div>
+        <div class="sub-title" id="regionRankTitle"></div>
+        <div class="table-card"><div class="table-wrap"><table class="data-table" id="tableRegions"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- ============ مناطق ============ -->
+      <div class="tab-panel hidden" id="panel-affairs">
+        <div class="fstrip" data-fstrip></div>
+        <div class="charts-grid grid-21">
+          <div class="chart-card"><h3 class="chart-title">نمودار مقایسه دستورکارهای ثبت شده و پایان یافته به تفکیک منطقه</h3><div class="chart-wrap" id="wrap06"><canvas id="chart06"></canvas></div></div>
+          <div class="chart-card"><h3 class="chart-title">نمودار نرخ دستورکارهای پایان یافته</h3><div class="chart-wrap" id="wrap09"><canvas id="chart09"></canvas></div></div>
+        </div>
+        <div class="charts-grid grid-3">
+          <div class="chart-card"><h3 class="chart-title">نمودار متوسط میزان کار روزانه مناطق</h3><div class="chart-wrap" id="wrap08"><canvas id="chart08"></canvas></div></div>
+          <div class="chart-card"><h3 class="chart-title">تعداد اکیپ به ازای هر منطقه</h3>
+            <div class="table-note">«منطقه» از ستون «نام امور» خوانده می‌شود؛ تعداد بر اساس اکیپ/پیمانکار اجرایی یکتا است و مقادیر خالی شمرده نمی‌شوند.</div>
+            <div class="info-box hidden" id="chart10Info"></div>
+            <div class="chart-wrap" id="wrap10"><canvas id="chart10"></canvas></div></div>
+          <div class="chart-card"><h3 class="chart-title">دستورکارهای باز به تفکیک مناطق</h3><div class="chart-wrap" id="wrap07"><canvas id="chart07"></canvas></div></div>
+        </div>
+        <div class="sub-title">رتبه‌بندی مناطق بر اساس عملکرد دستورکار</div>
+        <div class="section-note" id="affairRankNote"></div>
+        <div class="sub-title" id="affairRankTitle"></div>
+        <div class="table-card"><div class="table-wrap"><table class="data-table" id="tableAffairs"><thead></thead><tbody></tbody></table></div></div>
+      </div>
+
+      <!-- ============ دستورکارهای باز ============ -->
+      <div class="tab-panel hidden" id="panel-open">
+        <div class="fstrip" data-fstrip></div>
+        <div class="charts-grid">
+          <div class="chart-card"><h3 class="chart-title">نمودار دستورکارهای باز بر اساس مرحله فعلی</h3>
+            <div class="ok-box hidden" id="chart04Empty">دستورکار بازی وجود ندارد.</div>
+            <div class="chart-wrap" id="wrap04"><canvas id="chart04"></canvas></div></div>
+          <div class="chart-card"><h3 class="chart-title">نمودار تعداد دستورکارهای باز به تفکیک مناطق</h3><div class="chart-wrap" id="wrap05"><canvas id="chart05"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- ============ نوع پرونده ============ -->
+      <div class="tab-panel hidden" id="panel-caseType">
+        <div class="fstrip" data-fstrip></div>
+        <div class="sub-title">تحلیل نوع پرونده</div>
+        <div class="section-note">ترکیب حجم کار، وضعیت پایان و عملکرد انواع پرونده در محدوده فیلتر فعلی.</div>
+        <div class="info-box hidden" id="caseInfo"></div>
+        <div id="caseBody">
+          <div class="charts-grid grid-082">
+            <div class="chart-card"><h3 class="chart-title">سهم دستورکارها به تفکیک نوع پرونده</h3><div class="chart-wrap tall"><canvas id="chart14"></canvas></div></div>
+            <div class="chart-card"><h3 class="chart-title">مقایسه دستورکارهای ثبت شده و پایان یافته به تفکیک نوع پرونده</h3><div class="chart-wrap" id="wrap15"><canvas id="chart15"></canvas></div></div>
+          </div>
+          <div class="sub-title">جدول تحلیلی نوع پرونده</div>
+          <div class="table-card"><div class="table-wrap"><table class="data-table" id="tableCase"><thead></thead><tbody></tbody></table></div></div>
+        </div>
+      </div>
+
+      <!-- ============ تحلیل عیوب (فقط فایل پروژه‌های تعمیراتی) ============ -->
+      <div class="tab-panel hidden" id="panel-defects">
+        <div class="section-note">این تب فقط از فایل «پروژه‌های تعمیراتی» استفاده می‌کند. بازه زمانی بر اساس «تاریخ ابلاغ به اکیپ اجرا» اعمال می‌شود و مقدار خالی «تعداد عیب» صفر فرض نمی‌شود.</div>
+        <div class="info-box hidden" id="defectInfo"></div>
+        <div id="defectBody">
+          <div class="kpi-grid kpi-grid-4" id="defectKpiGrid"></div>
+          <div class="warn-box hidden" id="defectNegWarn"></div>
+          <div id="defectCharts">
+            <div class="charts-grid grid-defect-top">
+              <div class="chart-card"><h3 class="chart-title">توزیع دستورکارها بر اساس تعداد عیب</h3><div class="chart-wrap tall"><canvas id="chart19"></canvas></div></div>
+              <div class="chart-card"><h3 class="chart-title">سهم تعداد کل عیوب به تفکیک معاونت</h3><div class="chart-wrap tall"><canvas id="chart23"></canvas></div></div>
+            </div>
+            <div id="defectAreaCharts">
+              <div class="charts-grid">
+                <div class="chart-card wide"><h3 class="chart-title">ماتریس بار عیب منطقه‌ای</h3><div class="chart-wrap xtall"><canvas id="chartMatrix"></canvas></div></div>
+                <div class="chart-card wide"><h3 class="chart-title">تعداد کل عیب به تفکیک منطقه</h3><div class="chart-wrap xtall"><canvas id="chart21"></canvas></div></div>
+                <div class="chart-card wide"><h3 class="chart-title">مقایسه متوسط و میانه تعداد عیب در هر دستورکار به تفکیک منطقه</h3><div class="chart-wrap xtall"><canvas id="chart22"></canvas></div></div>
+              </div>
+            </div>
+            <div class="info-box hidden" id="defectAreaInfo"></div>
+            <div id="defectRiskCharts">
+              <div class="charts-grid">
+                <div class="chart-card"><h3 class="chart-title">نرخ دستورکارهای پرعیب به تفکیک منطقه</h3><div class="chart-wrap" id="wrap24"><canvas id="chart24"></canvas></div><div class="caption" id="chart24Cap"></div></div>
+                <div class="chart-card"><h3 class="chart-title">دستورکارهای ابلاغ‌شده بدون ثبت تعداد عیب</h3><div class="chart-wrap" id="wrap25"><canvas id="chart25"></canvas></div><div class="caption">هر میله تعداد واقعی دستورکارهای ابلاغ‌شده‌ای را نشان می‌دهد که «تعداد عیب» برای آن‌ها ثبت نشده است. از نظر فرآیندی مقدار مطلوب این شاخص برای همه مناطق صفر است.</div></div>
+              </div>
+            </div>
+            <div class="sub-title">وضعیت زمان باقی‌مانده دستورکارها به تفکیک منطقه</div>
+            <div class="info-box hidden" id="chart26Info"></div>
+            <div id="chart26Body">
+              <div class="charts-grid"><div class="chart-card wide"><div class="chart-wrap" id="wrap26"><canvas id="chart26"></canvas></div></div></div>
+              <div class="caption" id="chart26Cap"></div>
+            </div>
+          </div>
+          <div class="sub-title" id="mgmtTitle">جدول مدیریتی تحلیل دستورکارها بر اساس عیوب</div>
+          <div class="info-box hidden" id="mgmtInfo"></div>
+          <div id="mgmtBody">
+            <div class="table-note">این جدول فقط دستورکارهایی را می‌پذیرد که «تاریخ ابلاغ به اکیپ اجرا» معتبر دارند. مقادیر خالی تعداد عیب صفر محسوب نمی‌شوند و در ستون کیفیت ثبت عیب جداگانه گزارش شده‌اند.</div>
+            <div class="caption" id="mgmtCap"></div>
+            <div class="table-card"><div class="table-wrap"><table class="data-table" id="tableDefect"><thead></thead><tbody></tbody></table></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ خروجی ============ -->
+      <div class="tab-panel hidden" id="panel-export">
+        <div class="fstrip" data-fstrip></div>
+        <div class="sub-title">خروجی و گزارش</div>
+        <details class="expander"><summary>مشاهده داده فیلترشده</summary>
+          <div class="table-head"><span class="table-count" id="exportCount"></span></div>
+          <div class="table-wrap"><table class="data-table" id="tableExport"><thead></thead><tbody></tbody></table></div>
+        </details>
+        <div class="sub-title">دانلود خروجی</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+          <button class="btn btn-primary" id="downloadXlsx">⬇️ دانلود Excel فیلترشده</button>
+          <button class="btn" id="downloadCsv">⬇️ دانلود CSV فیلترشده</button>
+          <button class="btn" id="downloadSummary">⬇️ دانلود خلاصه مدیریتی</button>
+        </div>
+      </div>
+    </div>
+    <div class="caption" style="text-align:center;margin-top:24px;" id="footerCap"></div>
+  </div>
+</div>
+<script>
+"use strict";
+/* ============================================================
+   بخش ۱: ثابت‌ها و ابزارهای متنی/تاریخ (همسان با dashboard_core.py و data_service.py)
+   ============================================================ */
+const VERSION = "5.10.3";
+const COLUMN_ALIASES = {
+  row: ["ردیف", "شماره ردیف"],
+  work_order: ["شماره دستورکار", "شماره دستور کار", "کد دستورکار", "دستورکار"],
+  system_number: ["شماره سیستمی", "شماره سیستم", "کد سیستمی"],
+  fiscal_year: ["سال مالی", "سال مالي"],
+  title: ["عنوان دستورکار", "عنوان دستور کار", "شرح دستورکار", "شرح"],
+  stage: ["مرحله فعلی", "مرحله", "وضعیت", "وضعیت فعلی", "وضعیت دستورکار"],
+  current_user: ["کاربر فعلی", "کاربر"],
+  case_type: ["نوع پرونده", "نوع"],
+  date: ["تاریخ زمانبندی اجرا", "تاریخ زمان بندی اجرا", "تاریخ اجرا", "تاریخ"],
+  duration: ["تخمین پلنر از مدت زمان تعمیر (دقیقه)", "مدت زمان تعمیر", "مدت تعمیر", "زمان تعمیر"],
+  affair: ["نام امور", "امور", "نام امور اجرایی"],
+  supervisor: ["ناظر", "نام ناظر"],
+  contractor: ["پیمانکار/اکیپ اجرایی", "پیمانکار / اکیپ اجرایی", "پیمانکار", "اکیپ اجرایی"],
+  region: ["معاونت", "ناحیه", "منطقه"],
+  defect_count: ["تعداد عیب", "تعداد معایب"],
+  referral_date: ["تاریخ ابلاغ به اکیپ اجرا", "تاریخ ارجاع به اکیپ اجرا", "تاریخ ارجاع"],
+  operation_date: ["تاریخ اتمام عملیات اجرایی", "تاریخ اتمام عملیات", "تاریخ پایان عملیات"],
+  completion_date: ["تاریخ پایان دستورکار", "تاریخ خاتمه دستورکار"],
+  remaining_time: ["زمان باقی مانده", "زمان باقیمانده", "زمان باقی‌مانده", "مدت زمان باقی مانده"]
+};
+const REMAINING_TIME_EXCLUDED_STAGES = ["پایان", "تعریف دستورکار"];
+const COMPLETED_STAGE_VALUES = ["پایان", "اتمام", "تکمیل", "تکمیل شده", "خاتمه یافته", "بسته شده"];
+const NORMALIZED_TEXT_KEYS = ["affair", "stage", "case_type", "supervisor", "contractor", "current_user", "title"];
+const QUADRANT_COLORS = {"شمالغرب":"#4F46E5","شمالشرق":"#0D9488","جنوبغرب":"#D97706","جنوبشرق":"#E11D48"};
+const QUADRANT_FALLBACK = "#64748B";
+const DEFAULT_REGION_MAP = {
+  "بیهقی":"شمالغرب","فردوسی":"شمالغرب","سعادت آباد":"شمالغرب","دانشگاه":"شمالغرب","آزادی":"شمالغرب","قدس":"شمالغرب",
+  "شمیران":"شمالشرق","بوعلی":"شمالشرق","نارمک":"شمالشرق","نیاوران":"شمالشرق","پاسداران":"شمالشرق","تهرانپارس":"شمالشرق",
+  "بهمن":"جنوبغرب","سهروردی":"جنوبغرب","سینا":"جنوبغرب","رودکی":"جنوبغرب","فارابی":"جنوبغرب",
+  "مولوی":"جنوبشرق","هفده شهریور":"جنوبشرق","بعثت":"جنوبشرق","خیام":"جنوبشرق","افسریه":"جنوبشرق"
+};
+const REGION_MAP = (function(){ const m = {}; for(const k in DEFAULT_REGION_MAP) m[normalizeText(k)] = normalizeText(DEFAULT_REGION_MAP[k]); return m; })();
+
+function isMissing(v){ return v===null || v===undefined || v==="" || (typeof v==="number" && isNaN(v)); }
+function normalizeText(v){
+  if(isMissing(v)) return "";
+  let t = String(v).normalize("NFKC");
+  t = t.replace(/ي/g,"ی").replace(/ى/g,"ی").replace(/ك/g,"ک").replace(/ۀ/g,"ه").replace(/ة/g,"ه")
+       .replace(/‌/g," ").replace(/[‏‎]/g,"");
+  return t.replace(/\s+/g," ").trim();
+}
+function normalizeKey(v){ return normalizeText(v).replace(/ /g,"").toLowerCase(); }
+function toAsciiDigits(t){
+  return String(t).replace(/[۰-۹]/g, d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g, d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+}
+function cmpStr(a,b){ return a<b?-1:(a>b?1:0); }           // ترتیب کد یونیکد مثل sorted() پایتون
+function sortedUnique(arr){ return Array.from(new Set(arr.filter(v=>String(v).trim()!==""))).sort((a,b)=>String(a).localeCompare(String(b),"fa")); }
+
+/* عدد: ارقام فارسی/عربی و جداکننده هزارگان پذیرفته می‌شود (مثل _to_number پایتون) */
+function toNumber(v){
+  if(isMissing(v)) return null;
+  if(typeof v==="number") return isFinite(v) ? v : null;
+  if(typeof v==="boolean") return null;
+  let s = String(v).replace(/[۰-۹]/g, d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g, d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  s = s.replace(/٫/g,".").replace(/٬/g,",").replace(/,/g,"").replace(/−/g,"-").trim();
+  if(s==="" || !/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(s)) return null;
+  const n = Number(s);
+  return isFinite(n) ? n : null;
+}
+
+/* ---------- تقویم جلالی ---------- */
+function jalaliToGregorianArr(jy,jm,jd){
+  jy += 1595;
+  let days = -355668 + (365*jy) + (Math.floor(jy/33)*8) + Math.floor(((jy%33)+3)/4) + jd;
+  if(jm < 7) days += (jm-1)*31; else days += ((jm-7)*30)+186;
+  let gy = 400*Math.floor(days/146097); days %= 146097;
+  if(days > 36524){ days--; gy += 100*Math.floor(days/36524); days %= 36524; if(days >= 365) days++; }
+  gy += 4*Math.floor(days/1461); days %= 1461;
+  if(days > 365){ gy += Math.floor((days-1)/365); days = (days-1)%365; }
+  let gd = days+1;
+  const leap = (gy%4===0 && (gy%100!==0 || gy%400===0));
+  const md = [0,31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+  let gm = 1;
+  for(let i=1;i<=12;i++){ if(gd <= md[i]){ gm=i; break; } gd -= md[i]; }
+  return [gy,gm,gd];
+}
+function jalaliToDayNum(jy,jm,jd){ const g = jalaliToGregorianArr(jy,jm,jd); return Math.floor(Date.UTC(g[0],g[1]-1,g[2])/86400000); }
+function dayNumToJalali(n){
+  const d = new Date(n*86400000);
+  let gy=d.getUTCFullYear(); const gm=d.getUTCMonth()+1, gd=d.getUTCDate();
+  const gdm=[0,31,59,90,120,151,181,212,243,273,304,334];
+  let jy;
+  if(gy>1600){ jy=979; gy-=1600; } else { jy=0; gy-=621; }
+  const gy2 = (gm>2) ? gy+1 : gy;
+  let days = (365*gy)+Math.floor((gy2+3)/4)-Math.floor((gy2+99)/100)+Math.floor((gy2+399)/400)-80+gd+gdm[gm-1];
+  jy += 33*Math.floor(days/12053); days %= 12053;
+  jy += 4*Math.floor(days/1461); days %= 1461;
+  if(days>365){ jy += Math.floor((days-1)/365); days = (days-1)%365; }
+  const jm = (days<186) ? 1+Math.floor(days/31) : 7+Math.floor((days-186)/30);
+  const jd = 1+((days<186) ? (days%31) : ((days-186)%30));
+  return `${String(jy).padStart(4,"0")}/${String(jm).padStart(2,"0")}/${String(jd).padStart(2,"0")}`;
+}
+function jalaliYearLength(jy){ try{ return jalaliToDayNum(jy+1,1,1) - jalaliToDayNum(jy,1,1); }catch(e){ return 0; } }
+function validJalali(jy,jm,jd){
+  if(jy<=0 || jm<1 || jm>12 || jd<=0) return false;
+  const max = jm<=6 ? 31 : jm<=11 ? 30 : (jalaliYearLength(jy)===366 ? 30 : 29);
+  return jd<=max;
+}
+/* تبدیل تاریخ شمسی (با ساعت اختیاری) به «شماره روز»؛ نامعتبر = null  (parse_jalali_datetime) */
+function parseJalaliDay(v){
+  let t = normalizeText(v);
+  if(!t) return null;
+  t = toAsciiDigits(t);
+  const sp = t.indexOf(" ");
+  const datePart = sp>=0 ? t.slice(0,sp) : t;
+  const timePart = sp>=0 ? t.slice(sp+1).trim() : "";
+  let bits;
+  if(datePart.includes("/")) bits = datePart.split("/");
+  else if(datePart.includes("-")) bits = datePart.split("-");
+  else return null;
+  if(bits.length!==3 || !bits.every(b=>/^\d+$/.test(b))) return null;
+  const jy=parseInt(bits[0],10), jm=parseInt(bits[1],10), jd=parseInt(bits[2],10);
+  if(!validJalali(jy,jm,jd)) return null;
+  if(timePart){
+    const tb = timePart.split(":");
+    if(tb.length<1 || tb.length>3 || tb.some(b=>b==="")) return null;
+    if(!/^\d+$/.test(tb[0])) return null;
+    const hh=parseInt(tb[0],10);
+    let mi=0, ss=0;
+    if(tb.length>=2){ if(!/^\d+$/.test(tb[1])) return null; mi=parseInt(tb[1],10); }
+    if(tb.length>=3){ const f=parseFloat(tb[2]); if(isNaN(f)) return null; ss=Math.trunc(f); }
+    if(!(hh>=0&&hh<=23&&mi>=0&&mi<=59&&ss>=0&&ss<=59)) return null;
+  }
+  return jalaliToDayNum(jy,jm,jd);
+}
+function canonicalJalali(v){            // canonical_jalali_date: فقط تاریخ معتبر، بدون بررسی ساعت
+  let t = normalizeText(v);
+  if(!t) return "";
+  t = toAsciiDigits(t);
+  const datePart = t.split(" ")[0];
+  const bits = datePart.includes("/") ? datePart.split("/") : datePart.split("-");
+  if(bits.length!==3 || !bits.every(b=>/^\d+$/.test(b))) return "";
+  const jy=parseInt(bits[0],10), jm=parseInt(bits[1],10), jd=parseInt(bits[2],10);
+  if(!validJalali(jy,jm,jd)) return "";
+  return `${String(jy).padStart(4,"0")}/${String(jm).padStart(2,"0")}/${String(jd).padStart(2,"0")}`;
+}
+function dayOfLabel(label){ const p = label.split("/").map(Number); return jalaliToDayNum(p[0],p[1],p[2]); }
+
+/* ---------- محاسبات عددی هم‌رفتار با pandas/numpy ---------- */
+function roundHalfEven(x, d=2){
+  if(x===null || x===undefined || isNaN(x)) return x;
+  const m = Math.pow(10,d), y = x*m, f = Math.floor(y), diff = y - f;
+  let r; if(diff>0.5) r=f+1; else if(diff<0.5) r=f; else r = (f%2===0) ? f : f+1;
+  return r/m;
+}
+function quantileHigher(sortedVals, q){        // quantile(q, interpolation="higher")
+  const n = sortedVals.length; if(!n) return 0;
+  const idx = Math.min(n-1, Math.max(0, Math.ceil(q*(n-1))));
+  return sortedVals[idx];
+}
+function medianOf(vals){
+  if(!vals.length) return 0;
+  const s = [...vals].sort((a,b)=>a-b), n = s.length;
+  return n%2 ? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2;
+}
+function maxOf(a){ let m=-Infinity; for(const v of a) if(v>m) m=v; return m; }
+function minOf(a){ let m=Infinity; for(const v of a) if(v<m) m=v; return m; }
+function meanOf(vals){ return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0; }
+function rankMin(values, descending=true){     // rank(method="min")؛ NaN → null
+  return values.map(v=>{
+    if(v===null || v===undefined || isNaN(v)) return null;
+    let c = 0; for(const w of values){ if(w===null || w===undefined || isNaN(w)) continue; if(descending ? w>v : w<v) c++; }
+    return c+1;
+  });
+}
+function sortBy(arr, keys){                    // keys: [[fn, "asc"|"desc"], ...]  (پایدار)
+  return arr.map((x,i)=>[x,i]).sort((A,B)=>{
+    for(const [fn,dir] of keys){
+      const a=fn(A[0]), b=fn(B[0]);
+      let c = (typeof a==="string" && typeof b==="string") ? cmpStr(a,b) : (a<b?-1:(a>b?1:0));
+      if(c!==0) return dir==="desc" ? -c : c;
+    }
+    return A[1]-B[1];
+  }).map(p=>p[0]);
+}
+
+/* ============================================================
+   بخش ۲: خواندن و آماده‌سازی داده (prepare_data)
+   ============================================================ */
+function resolveColumns(headers){
+  const norm = new Map();
+  headers.forEach(h=>norm.set(normalizeKey(h), h));
+  const out = {};
+  for(const key in COLUMN_ALIASES){
+    let match = null;
+    for(const alias of COLUMN_ALIASES[key]){
+      const nk = normalizeKey(alias);
+      if(norm.has(nk)){ match = norm.get(nk); break; }
+    }
+    out[key] = match;
+  }
+  return out;
+}
+function detectBestSheet(wb){
+  const names = wb.SheetNames;
+  const headerOf = (n)=>{
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1, defval:""});
+    return (aoa[0]||[]).map(normalizeText);
+  };
+  for(const pref of ["WorksheetName","داده","Data","Sheet1"]){
+    if(names.includes(pref)){ const r = resolveColumns(headerOf(pref)); if(r.affair && r.stage) return pref; }
+  }
+  let best = names[0], bestScore = -1;
+  for(const n of names){
+    try{
+      const r = resolveColumns(headerOf(n));
+      let score = ["work_order","title","stage","date","affair","contractor"].filter(k=>r[k]).length;
+      if(r.affair && r.stage) score += 10;
+      if(score > bestScore){ bestScore = score; best = n; }
+    }catch(e){}
+  }
+  return best;
+}
+
+/* kind: "primary" (گزارش زمان‌بندی) | "projects" (پروژه‌های تعمیراتی) */
+function prepareDataset(aoa, kind, fileName, sheetName){
+  if(!aoa || !aoa.length) throw new Error("فایل خالی است.");
+  const headers = (aoa[0]||[]).map(normalizeText);
+  const cols = resolveColumns(headers);
+  if(!cols.affair || !cols.stage){
+    const miss = []; if(!cols.affair) miss.push("نام امور"); if(!cols.stage) miss.push("مرحله فعلی");
+    throw new Error("ستون‌های ضروری پیدا نشد: " + miss.join("، "));
+  }
+  const idx = {};
+  for(const k in cols) idx[k] = cols[k] ? headers.indexOf(cols[k]) : -1;
+  const refKey = kind==="primary" ? "date" : "referral_date";
+  const completedSet = new Set(COMPLETED_STAGE_VALUES.map(normalizeKey));
+  const rows = [], unmappedSet = new Set();
+  for(let r=1; r<aoa.length; r++){
+    const raw = aoa[r];
+    if(!raw || raw.every(isMissing)) continue;
+    const get = (k)=> idx[k]>=0 ? raw[idx[k]] : undefined;
+    const affair = normalizeText(get("affair"));
+    const stage = normalizeText(get("stage"));
+    let region = "";
+    if(idx.region>=0) region = normalizeText(get("region"));
+    if(!region) region = REGION_MAP[affair] || "تعریف‌نشده";
+    if(region==="تعریف‌نشده" && affair) unmappedSet.add(affair);
+    const refText = get(refKey);
+    const refDay = idx[refKey]>=0 ? parseJalaliDay(refText) : null;
+    const row = {
+      raw, affair, stage, region,
+      caseType: normalizeText(get("case_type")),
+      contractor: normalizeText(get("contractor")),
+      supervisor: normalizeText(get("supervisor")),
+      title: normalizeText(get("title")),
+      workOrder: isMissing(get("work_order")) ? "" : String(get("work_order")).trim(),
+      completed: completedSet.has(normalizeKey(stage)),
+      refDay, refLabel: refDay===null ? "" : dayNumToJalali(refDay),
+      refText: isMissing(refText) ? "" : String(refText)
+    };
+    if(kind==="primary"){
+      const t = normalizeText(get("date"));
+      row.dateBucket = t ? t.split(/\s+/)[0] : "";
+    } else {
+      row.defect = toNumber(get("defect_count"));
+      row.remaining = toNumber(get("remaining_time"));
+    }
+    rows.push(row);
+  }
+  const labelMap = new Map();
+  rows.forEach(r=>{ if(r.refDay!==null && !labelMap.has(r.refLabel)) labelMap.set(r.refLabel, r.refDay); });
+  const dateOptions = Array.from(labelMap, ([label,day])=>({label,day})).sort((a,b)=>a.day-b.day);
+  return {kind, fileName, sheetName, headers, cols, idx, rows, dateOptions, unmapped: Array.from(unmappedSet).sort(cmpStr)};
+}
+
+/* ============================================================
+   بخش ۳: فیلتر، خلاصه‌ها و رتبه‌بندی (همسان با dashboard_core.py)
+   ============================================================ */
+const STATE = {
+  primary:null, projects:null, loadedAt:null,
+  sel:{regions:[], affairs:[], stages:[], cases:[]},
+  tab:"overview"
+};
+function effectiveSelection(selected, allOptions){
+  if(!selected || !selected.length) return null;
+  if(selected.length===allOptions.length && selected.every(s=>allOptions.includes(s))) return null;
+  return selected;
+}
+function groupSummary(rows, keyFn, days, blankLabel){
+  const m = new Map();
+  rows.forEach(r=>{
+    let k = keyFn(r); if(k==="" || k===null || k===undefined) k = blankLabel;
+    if(!m.has(k)) m.set(k,{group:k,total:0,completed:0});
+    const g = m.get(k); g.total++; if(r.completed) g.completed++;
+  });
+  const d = Math.max(Math.trunc(days),1);
+  const out = Array.from(m.values()).sort((a,b)=>cmpStr(a.group,b.group)).map(g=>({
+    group:g.group, total:g.total, completed:g.completed, open:g.total-g.completed,
+    rate:g.completed/g.total*100, avg:g.total/d
+  }));
+  return sortBy(out, [[x=>x.total,"desc"]]);
+}
+function performanceRanking(summary, sourceRows, keyFn, blankLabel, days){
+  const d = Math.max(Math.trunc(days),1);
+  const crewMap = new Map(); let crewAvail = false;
+  sourceRows.forEach(r=>{
+    if(!r.contractor) return;
+    let k = keyFn(r); if(k==="") k = blankLabel;
+    if(!crewMap.has(k)) crewMap.set(k,new Set());
+    crewMap.get(k).add(r.contractor); crewAvail = true;
+  });
+  const rows = summary.map(s=>{
+    const crew = crewMap.has(s.group) ? crewMap.get(s.group).size : 0;
+    return {group:s.group, total:s.total, completed:s.completed, crew,
+            daily: crew>0 ? roundHalfEven(s.total/(d*crew),2) : null};
+  });
+  const rT = rankMin(rows.map(r=>r.total)), rC = rankMin(rows.map(r=>r.completed));
+  rows.forEach((r,i)=>{ r.rankTotal=rT[i]; r.rankCompleted=rC[i]; });
+  if(crewAvail){
+    const rD = rankMin(rows.map(r=>r.daily));
+    rows.forEach((r,i)=>{ r.rankDaily = rD[i]===null ? rows.length+1 : rD[i]; });
+  } else rows.forEach(r=>{ r.rankDaily = null; });
+  rows.forEach(r=>{
+    const mean = crewAvail ? (r.rankTotal+r.rankCompleted+r.rankDaily)/3 : (r.rankTotal+r.rankCompleted)/2;
+    r.scoreRaw = (rows.length+1) - mean;
+  });
+  const rF = rankMin(rows.map(r=>r.scoreRaw));
+  rows.forEach((r,i)=>{ r.finalRank = rF[i]; r.score = roundHalfEven(r.scoreRaw,2); });
+  return {rows: sortBy(rows, [[r=>r.finalRank,"asc"],[r=>r.score,"desc"],[r=>r.total,"desc"]]), crewAvail};
+}
+
+/* ---------- KPIهای عیب و جدول‌های مدیریتی (فقط فایل پروژه‌های تعمیراتی) ---------- */
+function defectCountKpi(prj, hasCol){
+  const eligible = prj.length;
+  const empty = {available:false,total:0,average:0,median:0,covered:0,missing:eligible,eligible};
+  if(!hasCol) return empty;
+  const vals = prj.map(r=>r.defect).filter(v=>v!==null);
+  if(!vals.length) return empty;
+  return {available:true,total:Math.trunc(vals.reduce((a,b)=>a+b,0)),average:meanOf(vals),median:medianOf(vals),
+          covered:vals.length,missing:eligible-vals.length,eligible};
+}
+function referralRows(prj, referralCol){      // ردیف‌های دارای «تاریخ ابلاغ» معتبر
+  if(!referralCol) return [];
+  return prj.filter(r=>r.refDay!==null);
+}
+function validDefectOf(r){ return (r.defect!==null && r.defect>=0) ? r.defect : null; }
+function defectRegionRisk(prj, referralCol, hasDefectCol){
+  if(!prj.length || !hasDefectCol) return {rows:[], p90:0};
+  const work = referralRows(prj, referralCol);
+  if(!work.length) return {rows:[], p90:0};
+  const valid = work.map(validDefectOf).filter(v=>v!==null).sort((a,b)=>a-b);
+  const p90 = valid.length ? quantileHigher(valid,0.90) : 0;
+  const m = new Map();
+  work.forEach(r=>{
+    const k = r.affair || "بدون منطقه";
+    if(!m.has(k)) m.set(k,{region:k,eligible:0,covered:0,high:0});
+    const g = m.get(k); g.eligible++;
+    const v = validDefectOf(r);
+    if(v!==null){ g.covered++; if(v>=p90) g.high++; }
+  });
+  let rows = Array.from(m.values()).map(g=>({
+    region:g.region, eligible:g.eligible, covered:g.covered, missing:g.eligible-g.covered, high:g.high,
+    completeness:g.covered/g.eligible*100, highRate:g.high/g.eligible*100
+  }));
+  rows = sortBy(rows, [[r=>r.highRate,"desc"],[r=>r.high,"desc"],[r=>r.eligible,"desc"]]);
+  return {rows, p90};
+}
+function remainingTimeSummary(prj, hasRemCol, hasStageCol){
+  const info = {available:false, noStage:false, totalRows:0, excludedStage:0, blank:0, overdue:0, onTime:0};
+  if(!prj.length || !hasRemCol) return {rows:[], info};
+  if(!hasStageCol){ info.noStage = true; return {rows:[], info}; }
+  info.totalRows = prj.length;
+  const exSet = new Set(REMAINING_TIME_EXCLUDED_STAGES.map(normalizeText));
+  const notEx = prj.filter(r=>!exSet.has(normalizeText(r.stage)));
+  info.excludedStage = prj.length - notEx.length;
+  const work = notEx.filter(r=>r.remaining!==null);
+  info.blank = notEx.length - work.length;
+  info.available = true;
+  if(!work.length) return {rows:[], info};
+  const blankBy = new Map();
+  notEx.filter(r=>r.remaining===null).forEach(r=>{ const k=r.affair||"بدون منطقه"; blankBy.set(k,(blankBy.get(k)||0)+1); });
+  const m = new Map();
+  work.forEach(r=>{
+    const k = r.affair || "بدون منطقه";
+    if(!m.has(k)) m.set(k,{region:k,overdue:0,onTime:0,lateSum:0});
+    const g = m.get(k);
+    if(r.remaining<0){ g.overdue++; g.lateSum += -r.remaining; info.overdue++; } else { g.onTime++; info.onTime++; }
+  });
+  let rows = Array.from(m.values()).map(g=>{
+    const calc = g.overdue+g.onTime;
+    return {region:g.region, overdue:g.overdue, onTime:g.onTime, calc,
+      overdueRate:g.overdue/calc*100, onTimeRate:g.onTime/calc*100,
+      blank:blankBy.get(g.region)||0, avgDelay: g.overdue ? g.lateSum/g.overdue : 0};
+  });
+  rows = sortBy(rows, [[r=>r.overdueRate,"desc"],[r=>r.overdue,"desc"]]);
+  return {rows, info};
+}
+function defectManagementTable(prj, referralCol, hasDefectCol){
+  if(!prj.length || !hasDefectCol) return {rows:[], total:null, p90:0};
+  const work = referralRows(prj, referralCol);
+  if(!work.length) return {rows:[], total:null, p90:0};
+  const valid = work.map(validDefectOf).filter(v=>v!==null);
+  const sortedValid = [...valid].sort((a,b)=>a-b);
+  const p90 = sortedValid.length ? quantileHigher(sortedValid,0.90) : 0;
+  const totalDefects = valid.reduce((a,b)=>a+b,0);
+  const high = (r)=>{ const v=validDefectOf(r); return v!==null && v>=p90; };
+  const groups = new Map();
+  work.forEach(r=>{
+    const dep = r.region || "تعریف‌نشده", aff = r.affair || "بدون منطقه";
+    const k = dep+"\u0000"+aff;
+    if(!groups.has(k)) groups.set(k,{dep,aff,rows:[]});
+    groups.get(k).rows.push(r);
+  });
+  const crewsOf = (rs)=> new Set(rs.map(r=>r.contractor).filter(Boolean)).size;
+  const build = (rs)=>{
+    const eligible = rs.length, completed = rs.filter(r=>r.completed).length;
+    const ds = rs.map(validDefectOf).filter(v=>v!==null);
+    const covered = ds.length, sum = ds.reduce((a,b)=>a+b,0);
+    const hi = covered ? rs.filter(high).length : 0;
+    return {eligible, completed, open:eligible-completed, rate:completed/eligible*100,
+      defects:sum, share: totalDefects ? sum/totalDefects*100 : 0,
+      mean: covered ? meanOf(ds) : 0, median: covered ? medianOf(ds) : 0, max: covered ? maxOf(ds) : 0,
+      high:hi, highRate:hi/eligible*100, missing:eligible-covered, completeness:covered/eligible*100, crews:crewsOf(rs)};
+  };
+  let rows = Array.from(groups.values()).map(g=>({dep:g.dep, aff:g.aff, ...build(g.rows)}));
+  rows = sortBy(rows, [[r=>r.defects,"desc"],[r=>r.mean,"desc"],[r=>r.eligible,"desc"]]);
+  rows.forEach((r,i)=>r.rank=i+1);
+  const totalBuild = build(work);
+  const total = {...totalBuild, share: totalDefects?100:0, defects: totalDefects,
+    mean: valid.length?meanOf(valid):0, median: valid.length?medianOf(valid):0, max: valid.length?maxOf(valid):0,
+    high: valid.length ? work.filter(high).length : 0};
+  total.highRate = total.high/total.eligible*100;
+  return {rows, total, p90};
+}
+
+/* ============================================================
+   بخش ۴: خط لوله کامل محاسبات (تاریخ ← فیلتر ← خلاصه‌ها)
+   ============================================================ */
+const $ = (id)=>document.getElementById(id);
+function inRangeRow(r, s, e){ return r.refDay!==null && r.refDay>=s && r.refDay<=e; }
+
+function compute(){
+  const P = STATE.primary, Q = STATE.projects;
+  const C = {P, Q, error:null, notices:[]};
+
+  /* ---- بازه زمانی مشترک (هر فایل با تاریخ مرجع خودش) ---- */
+  const optMap = new Map();
+  P.dateOptions.concat(Q ? Q.dateOptions : []).forEach(o=>{ if(!optMap.has(o.label)) optMap.set(o.label,o.day); });
+  const options = Array.from(optMap, ([label,day])=>({label,day})).sort((a,b)=>a.day-b.day);
+  C.dateOptions = options;
+  C.range = null;
+  if(options.length){
+    const fromTxt = $("dateFrom").value.trim(), toTxt = $("dateTo").value.trim();
+    const s = fromTxt ? canonicalJalali(fromTxt) : options[0].label;
+    const e = toTxt ? canonicalJalali(toTxt) : options[options.length-1].label;
+    if(!s || !e) C.error = "تاریخ واردشده معتبر نیست. قالب صحیح نمونه: 1405/01/01";
+    else {
+      const sd = dayOfLabel(s), ed = dayOfLabel(e);
+      if(sd>ed) C.error = "«از تاریخ» باید کوچک‌تر یا مساوی «تا تاریخ» باشد.";
+      else C.range = {start:sd, end:ed, startLabel:s, endLabel:e};
+    }
+  }
+  if(C.error){ C.filtered = []; return C; }
+
+  const dateFiltered = C.range ? P.rows.filter(r=>inRangeRow(r,C.range.start,C.range.end)) : P.rows;
+  C.missingRef = P.rows.filter(r=>r.refDay===null).length;
+  C.dateFiltered = dateFiltered;
+
+  /* ---- گزینه‌های فیلتر (آبشاری مثل sidebar_controls.render_filters) ---- */
+  const sel = STATE.sel;
+  C.optRegions = sortedUnique(dateFiltered.map(r=>r.region));
+  sel.regions = sel.regions.filter(v=>C.optRegions.includes(v));
+  const regionsFilter = effectiveSelection(sel.regions, C.optRegions);
+  const regionFiltered = regionsFilter ? dateFiltered.filter(r=>regionsFilter.includes(r.region)) : dateFiltered;
+  C.optAffairs = sortedUnique(regionFiltered.map(r=>r.affair));
+  sel.affairs = sel.affairs.filter(v=>C.optAffairs.includes(v));
+  const affairsFilter = effectiveSelection(sel.affairs, C.optAffairs);
+  C.optStages = sortedUnique(dateFiltered.map(r=>r.stage));
+  sel.stages = sel.stages.filter(v=>C.optStages.includes(v));
+  const stagesFilter = effectiveSelection(sel.stages, C.optStages);
+  C.hasCase = !!P.cols.case_type;
+  C.optCases = C.hasCase ? sortedUnique(dateFiltered.map(r=>r.caseType)) : [];
+  sel.cases = sel.cases.filter(v=>C.optCases.includes(v));
+  const casesFilter = C.hasCase ? effectiveSelection(sel.cases, C.optCases) : null;
+  C.regionsFilter = regionsFilter; C.affairsFilter = affairsFilter; C.stagesFilter = stagesFilter; C.casesFilter = casesFilter;
+  C.blankStage = dateFiltered.filter(r=>r.stage==="").length;
+
+  const pass = (r, hasCaseCol)=>
+    (!regionsFilter || regionsFilter.includes(r.region)) &&
+    (!affairsFilter || affairsFilter.includes(r.affair)) &&
+    (!stagesFilter || stagesFilter.includes(r.stage)) &&
+    (!hasCaseCol || !casesFilter || casesFilter.includes(r.caseType));
+  C.filtered = dateFiltered.filter(r=>pass(r, C.hasCase));
+
+  /* ---- فایل پروژه‌ها: تاریخ مرجع خودش + همان فیلترهای غیرتاریخی ---- */
+  C.prj = null;
+  if(Q){
+    let pd;
+    if(!Q.cols.referral_date) pd = C.range ? [] : Q.rows;
+    else pd = C.range ? Q.rows.filter(r=>inRangeRow(r,C.range.start,C.range.end)) : Q.rows;
+    C.prj = pd.filter(r=>pass(r, !!Q.cols.case_type));
+  }
+
+  /* ---- تعداد روز گزارش ---- */
+  const days = C.filtered.map(r=>r.refDay).filter(d=>d!==null);
+  C.hasRef = days.length>0;
+  C.autoDays = C.hasRef ? (maxOf(days)-minOf(days)+1) : null;
+  const useAuto = $("daysAuto").checked && C.hasRef;
+  C.useAuto = useAuto;
+  C.reportDays = (useAuto && C.autoDays) ? C.autoDays : Math.max(1, Math.trunc(Number($("daysManual").value)||30));
+
+  /* ---- تنظیمات مدیریتی ---- */
+  const teams = Math.max(1, Math.trunc(Number($("teamsPerRegion").value)||3));
+  const perTeam = Math.max(1, Math.trunc(Number($("ordersPerTeam").value)||2));
+  C.dailyTarget = teams*perTeam;
+  C.periodTarget = C.reportDays * C.dailyTarget;
+  C.teams = teams; C.perTeam = perTeam;
+  C.alertThreshold = Number($("alertThreshold").value); if(isNaN(C.alertThreshold)) C.alertThreshold = 70;
+
+  if(!C.filtered.length) return C;
+
+  /* ---- خلاصه‌ها ---- */
+  const rows = C.filtered, d = C.reportDays;
+  const total = rows.length, completed = rows.filter(r=>r.completed).length;
+  C.m = {total, completed, open: total-completed, rate: total?completed/total*100:0, avg: d?total/d:0};
+  C.affairSummary = groupSummary(rows, r=>r.affair, d, "بدون منطقه");
+  C.regionSummary = groupSummary(rows, r=>r.region, d, "تعریف‌نشده");
+  const stg = new Map();
+  rows.forEach(r=>stg.set(r.stage,(stg.get(r.stage)||0)+1));
+  C.stageSummary = sortBy(Array.from(stg,([stage,count])=>({stage,count})), [[x=>x.count,"desc"]]);
+  const openRows = rows.filter(r=>!r.completed);
+  const ostg = new Map();
+  openRows.forEach(r=>ostg.set(r.stage,(ostg.get(r.stage)||0)+1));
+  C.openStages = sortBy(Array.from(ostg,([stage,count])=>({stage: stage===""?"بدون مرحله":stage, count})), [[x=>x.count,"desc"]]);
+  C.caseSummary = null;
+  if(C.hasCase) C.caseSummary = groupSummary(rows, r=>r.caseType, d, "بدون نوع پرونده");
+  if(affairsFilter) C.areaUniverse = [...affairsFilter];
+  else if(regionsFilter) C.areaUniverse = sortedUnique(regionFiltered.map(r=>r.affair));
+  else C.areaUniverse = sortedUnique(P.rows.map(r=>r.affair));
+  const ar = performanceRanking(C.affairSummary, rows, r=>r.affair, "بدون منطقه", d);
+  const rr = performanceRanking(C.regionSummary, rows, r=>r.region, "تعریف‌نشده", d);
+  C.areaRank = ar; C.deputyRank = rr;
+
+  /* ---- فایل پروژه‌ها ---- */
+  if(C.prj){
+    const cols = Q.cols;
+    C.defKpi = defectCountKpi(C.prj, !!cols.defect_count);
+    C.risk = defectRegionRisk(C.prj, cols.referral_date, !!cols.defect_count);
+    C.remain = remainingTimeSummary(C.prj, !!cols.remaining_time, !!cols.stage);
+    C.mgmt = defectManagementTable(C.prj, cols.referral_date, !!cols.defect_count);
+  }
+  return C;
+}
+
+/* ============================================================
+   بخش ۵: قالب‌بندی و ابزار نمودار
+   ============================================================ */
+let CUR = null;
+const charts = {};
+function fmt(n,digits=0){
+  if(n===null||n===undefined||isNaN(n)) return "—";
+  return Number(n).toLocaleString("fa-IR",{maximumFractionDigits:digits,minimumFractionDigits:0});
+}
+function fmtFixed(n,digits){ if(n===null||n===undefined||isNaN(n)) return "—"; return Number(n).toLocaleString("fa-IR",{maximumFractionDigits:digits,minimumFractionDigits:digits}); }
+function fmtPct(n,digits=1){ return fmtFixed(n,digits)+"%"; }
+function escapeHtml(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function quadrantColor(name){ return QUADRANT_COLORS[String(name).trim()] || QUADRANT_FALLBACK; }
+const CASE_COLORS = ["#7C6FE8","#14B8A6","#D97706","#0891B2","#16A34A","#DC2626","#64748B","#94A3B8"];
+
+function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+function inkColor(){ return cssVar("--ink")||"#262A3D"; }
+function lineColor(){ return cssVar("--line")||"#ECEEF7"; }
+function surfaceColor(){ return cssVar("--surface")||"#FFFFFF"; }
+function fontTick(size=11){ return {family:"Vazirmatn",size,color:inkColor()}; }
+
+/* برچسب عددی روی نمودارها؛ تنظیم هر دیتاست با ds.labelFmt / ds.noLabels / ds.labelMin */
+const NumberLabelsPlugin = {
+  id: "numberLabels",
+  afterDatasetsDraw(chart){
+    const ctx = chart.ctx, dark = document.body.classList.contains("dark");
+    const color = dark ? "#EDEFF9" : "#262A3D";
+    const type = chart.config.type, horizontal = chart.options.indexAxis==="y";
+    const stacked = !!(chart.options.scales && chart.options.scales.x && chart.options.scales.x.stacked);
+    ctx.save(); ctx.textBaseline = "middle"; ctx.textAlign = "center";
+    chart.data.datasets.forEach((ds, di)=>{
+      const meta = chart.getDatasetMeta(di);
+      if(meta.hidden || ds.noLabels) return;
+      if(type==="doughnut" || type==="pie"){
+        ctx.font = "700 11px Vazirmatn, Tahoma, sans-serif"; ctx.fillStyle = "#FFFFFF";
+        const total = ds.data.reduce((a,b)=>a+Number(b||0),0);
+        meta.data.forEach((arc,i)=>{
+          const v = Number(ds.data[i]||0); if(!v||!total) return;
+          const pct = v/total*100; if(pct<3) return;
+          const pos = arc.tooltipPosition(); ctx.fillText(Math.round(pct)+"%", pos.x, pos.y);
+        });
+        return;
+      }
+      const f = ds.labelFmt || ((v)=>fmt(v, Number.isInteger(v)?0:1));
+      if(type==="line"){
+        ctx.font = "700 11px Vazirmatn, Tahoma, sans-serif"; ctx.fillStyle = color;
+        meta.data.forEach((pt,i)=>{ const v=ds.data[i]; if(v===null||v===undefined||isNaN(v)) return; ctx.fillText(f(v,i), pt.x, pt.y-11); });
+        return;
+      }
+      ctx.font = "700 11px Vazirmatn, Tahoma, sans-serif";
+      meta.data.forEach((bar,i)=>{
+        const v = Number(ds.data[i]);
+        if(v===null||v===undefined||isNaN(v)) return;
+        if(v===0 && !ds.showZero) return;
+        if(horizontal){
+          if(stacked){
+            if(v < (ds.labelMin||4)) return;
+            ctx.fillStyle = "#FFFFFF"; ctx.fillText(f(v,i), (bar.x+bar.base)/2, bar.y);
+          } else {
+            ctx.fillStyle = color; ctx.textAlign = "left"; ctx.fillText(f(v,i), bar.x+6, bar.y); ctx.textAlign = "center";
+          }
+        } else { ctx.fillStyle = color; ctx.fillText(f(v,i), bar.x, bar.y-9); }
+      });
+    });
+    ctx.restore();
+  }
+};
+const CenterTextPlugin = {
+  id: "centerText",
+  afterDraw(chart){
+    const o = chart.options.plugins && chart.options.plugins.centerText;
+    if(!o || !o.text) return;
+    const a = chart.chartArea, ctx = chart.ctx;
+    const cx = (a.left+a.right)/2, cy = (a.top+a.bottom)/2;
+    ctx.save(); ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle = inkColor();
+    ctx.font = "800 20px Vazirmatn, Tahoma, sans-serif"; ctx.fillText(o.text, cx, cy-8);
+    ctx.font = "600 11px Vazirmatn, Tahoma, sans-serif"; ctx.fillStyle = cssVar("--muted")||"#8792A6"; ctx.fillText(o.sub||"", cx, cy+12);
+    ctx.restore();
+  }
+};
+Chart.register(NumberLabelsPlugin, CenterTextPlugin);
+
+function baseOptions(horizontal=false){
+  const opt = {
+    responsive:true, maintainAspectRatio:false,
+    layout:{padding:{top:22,right:horizontal?46:12,left:4,bottom:4}},
+    plugins:{
+      legend:{labels:{font:{family:"Vazirmatn",size:12},color:inkColor()}},
+      tooltip:{rtl:true,textDirection:"rtl",titleFont:{family:"Vazirmatn"},bodyFont:{family:"Vazirmatn"}}
+    },
+    scales:{
+      x:{ticks:fontTick(),grid:{display:false}},
+      y:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true}
+    }
+  };
+  if(horizontal){
+    opt.indexAxis = "y";
+    opt.scales = {
+      x:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true},
+      y:{ticks:fontTick(),grid:{display:false}}
+    };
+  }
+  return opt;
+}
+function rotatedX(size=10){ return {ticks:{...fontTick(size),maxRotation:55,minRotation:45,autoSkip:false},grid:{display:false}}; }
+function destroyChart(key){ if(charts[key]){ charts[key].destroy(); delete charts[key]; } }
+function setChart(key,canvasId,config){
+  destroyChart(key);
+  const el = $(canvasId); if(!el) return;
+  charts[key] = new Chart(el, config);
+}
+function setWrapHeight(wrapId, px){ const el=$(wrapId); if(el) el.style.height = Math.round(px)+"px"; }
+function rankTierColors(n){
+  if(n<=0) return [];
+  const c30=Math.round(n*0.30), c50=Math.round(n*0.50), c70=Math.round(n*0.70);
+  return [
+    ...Array(c30).fill("#DC2626"), ...Array(c50-c30).fill("#D97706"),
+    ...Array(c70-c50).fill("#EAB308"), ...Array(n-c70).fill("#16A34A")
+  ].reverse();
+}
+function hLine(id, axis, value, color, label, pos){
+  return {id, afterDraw(chart){
+    const sc = chart.scales[axis]; if(!sc) return;
+    const px = sc.getPixelForValue(value), ctx = chart.ctx, a = chart.chartArea;
+    if(isNaN(px)) return;
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash([6,4]); ctx.beginPath();
+    if(axis==="y"){ ctx.moveTo(a.left,px); ctx.lineTo(a.right,px); } else { ctx.moveTo(px,a.top); ctx.lineTo(px,a.bottom); }
+    ctx.stroke(); ctx.setLineDash([]);
+    if(label){
+      ctx.fillStyle = color; ctx.font = "700 11px Vazirmatn, Tahoma, sans-serif"; ctx.textBaseline = "bottom";
+      if(axis==="y"){ ctx.textAlign="right"; ctx.fillText(label, a.right-4, px-4); }
+      else { ctx.textAlign = pos==="left" ? "right" : "left"; ctx.fillText(label, pos==="left"? px-5 : px+5, a.top+12); }
+    }
+    ctx.restore();
+  }};
+}
+const donutLegend = ()=>({position:"bottom",labels:{font:{family:"Vazirmatn",size:11},color:inkColor()}});
+
+/* ============================================================
+   بخش ۶: نمودارهای «تحلیل از گزارش زمان‌بندی»
+   ============================================================ */
+function renderChart17(C){
+  const data = sortBy(C.deputyRank.rows, [[r=>r.score,"desc"],[r=>r.finalRank,"asc"]]);
+  setChart("c17","chart17",{type:"bar",
+    data:{labels:data.map(d=>d.group),datasets:[{label:"امتیاز رتبه‌ای",data:data.map(d=>d.score),backgroundColor:rankTierColors(data.length),borderRadius:6,labelFmt:v=>fmtFixed(v,2)}]},
+    options:{...baseOptions(false),plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{afterLabel:(c)=>`رتبه نهایی: ${fmt(data[c.dataIndex].finalRank)}`}}}}});
+}
+function renderChart16(C){
+  const data = sortBy(C.areaRank.rows, [[r=>r.finalRank,"asc"],[r=>r.score,"desc"]]);
+  setChart("c16","chart16",{type:"bar",
+    data:{labels:data.map(d=>d.group),datasets:[{label:"امتیاز رتبه‌ای",data:data.map(d=>d.score),backgroundColor:rankTierColors(data.length),borderRadius:6,labelFmt:v=>fmtFixed(v,2)}]},
+    options:{...baseOptions(false),scales:{x:rotatedX(10),y:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true}},
+      plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{afterLabel:(c)=>`رتبه نهایی: ${fmt(data[c.dataIndex].finalRank)}`}}}}});
+}
+function renderChart18(C){
+  const info = $("chart18Info"), wrap = $("chart18Wrap");
+  destroyChart("c18");
+  if(!C.P.cols.date){ info.textContent = "ستون «تاریخ زمانبندی اجرا» در فایل شناسایی نشد؛ بنابراین نمودار روند زمانی قابل نمایش نیست."; info.classList.remove("hidden"); wrap.classList.add("hidden"); return; }
+  const m = new Map();
+  C.filtered.forEach(r=>{ if(r.dateBucket) m.set(r.dateBucket,(m.get(r.dateBucket)||0)+1); });
+  if(!m.size){ info.textContent = "برای فیلتر فعلی، تاریخ زمانبندی اجرای معتبری برای رسم نمودار وجود ندارد."; info.classList.remove("hidden"); wrap.classList.add("hidden"); return; }
+  info.classList.add("hidden"); wrap.classList.remove("hidden");
+  const keyOf = (t)=>{ const p = (toAsciiDigits(t).match(/\d+/g)||[]); return p.length>=3 ? [0,+p[0],+p[1],+p[2],t] : [1,0,0,0,t]; };
+  const sorted = Array.from(m.entries()).sort((a,b)=>{ const A=keyOf(a[0]),B=keyOf(b[0]); for(let i=0;i<5;i++){ if(A[i]<B[i]) return -1; if(A[i]>B[i]) return 1; } return 0; });
+  setChart("c18","chart18",{type:"line",
+    data:{labels:sorted.map(x=>x[0]),datasets:[{label:"تعداد دستورکارها",data:sorted.map(x=>x[1]),borderColor:"#7C6FE8",backgroundColor:"rgba(124,111,232,.15)",pointBackgroundColor:"#7C6FE8",pointRadius:5,tension:0.25,fill:true,labelFmt:v=>fmt(v)}]},
+    options:{...baseOptions(false),plugins:{legend:{display:false},tooltip:{rtl:true}},scales:{x:rotatedX(10),y:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true}}}});
+}
+function renderChart04(C){
+  const data = [...C.openStages].sort((a,b)=>a.count-b.count);
+  const empty = !data.length;
+  $("chart04Empty").classList.toggle("hidden", !empty); $("wrap04").classList.toggle("hidden", empty);
+  destroyChart("c04"); if(empty) return;
+  setWrapHeight("wrap04", Math.max(350, 90+data.length*26));
+  const rev = [...data].reverse();
+  setChart("c04","chart04",{type:"bar",
+    data:{labels:rev.map(d=>d.stage),datasets:[{label:"تعداد دستورکارها",data:rev.map(d=>d.count),backgroundColor:"#F59E0B",borderRadius:6}]},
+    options:{...baseOptions(true),plugins:{legend:{display:false},tooltip:{rtl:true}}}});
+}
+function renderChart05(C){
+  const open = new Map(C.affairSummary.map(s=>[s.group,s.open]));
+  const data = sortBy(C.areaUniverse.map(a=>({group:a,open:open.get(a)||0})), [[x=>x.open,"asc"],[x=>x.group,"asc"]]);
+  setWrapHeight("wrap05", Math.max(500, 70+data.length*21));
+  const rev = [...data].reverse();
+  setChart("c05","chart05",{type:"bar",
+    data:{labels:rev.map(d=>d.group),datasets:[{label:"باز",data:rev.map(d=>d.open),backgroundColor:"#F43F5E",borderRadius:6,showZero:true}]},
+    options:{...baseOptions(true),plugins:{legend:{display:false},tooltip:{rtl:true}}}});
+}
+function regionalHeight(C){ return Math.max(470, 110 + C.affairSummary.length*18); }
+function renderChart06(C){
+  const S = C.affairSummary, target = C.periodTarget;
+  setWrapHeight("wrap06", regionalHeight(C));
+  setChart("c06","chart06",{type:"bar",
+    data:{labels:S.map(d=>d.group),datasets:[
+      {label:"ثبت شده",data:S.map(d=>d.total),backgroundColor:"#6D5FD8",borderRadius:6,showZero:true},
+      {label:"پایان یافته",data:S.map(d=>d.completed),backgroundColor:"#06B6D4",borderRadius:6,showZero:true}]},
+    options:{...baseOptions(false),scales:{x:rotatedX(10),y:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true,suggestedMax:target*1.08}}},
+    plugins:[hLine("target06","y",target,"#DC2626",`هدف دوره: ${fmt(target)}`)]});
+}
+function renderChart09(C){
+  const th = C.alertThreshold;
+  const data = [...C.affairSummary].sort((a,b)=>a.rate-b.rate), rev=[...data].reverse();
+  setWrapHeight("wrap09", regionalHeight(C));
+  setChart("c09","chart09",{type:"bar",
+    data:{labels:rev.map(d=>d.group),datasets:[{label:"نرخ پایان (%)",data:rev.map(d=>d.rate),backgroundColor:rev.map(d=>d.rate<th?"#DC2626":"#22C55E"),borderRadius:6,labelFmt:v=>fmtPct(v),showZero:true}]},
+    options:{...baseOptions(true),plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{label:(c)=>fmtPct(c.parsed.x)}}},
+      scales:{x:{ticks:{...fontTick(),callback:v=>v+"%"},grid:{color:lineColor()},beginAtZero:true,max:100},y:{ticks:fontTick(),grid:{display:false}}}},
+    plugins:[hLine("thr09","x",th,"#DC2626",`حد هشدار ${fmt(th)}%`,"left")]});
+}
+function renderChart08(C){
+  const data = [...C.affairSummary].sort((a,b)=>a.avg-b.avg), rev=[...data].reverse();
+  setWrapHeight("wrap08", regionalHeight(C));
+  setChart("c08","chart08",{type:"bar",
+    data:{labels:rev.map(d=>d.group),datasets:[{label:"متوسط دستورکار در روز",data:rev.map(d=>d.avg),backgroundColor:"#3B82F6",borderRadius:6,labelFmt:v=>fmtFixed(v,1),showZero:true}]},
+    options:{...baseOptions(true),plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{label:(c)=>fmt(c.parsed.x,2)}}},
+      scales:{x:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true,suggestedMax:C.dailyTarget*1.15},y:{ticks:fontTick(),grid:{display:false}}}},
+    plugins:[hLine("dt08","x",C.dailyTarget,"#DC2626",`هدف روزانه: ${fmt(C.dailyTarget)}`,"left")]});
+}
+function renderChart10(C){
+  const info = $("chart10Info"), wrap = $("wrap10");
+  destroyChart("c10");
+  if(!C.P.cols.contractor){ info.textContent="ستون پیمانکار/اکیپ اجرایی در فایل شناسایی نشد؛ بنابراین تحلیل تعداد اکیپ نمایش داده نمی‌شود."; info.classList.remove("hidden"); wrap.classList.add("hidden"); return; }
+  const m = new Map();
+  C.filtered.forEach(r=>{ if(!r.contractor) return; const a=r.affair||"بدون منطقه"; if(!m.has(a)) m.set(a,new Set()); m.get(a).add(r.contractor); });
+  if(!m.size){ info.textContent="در داده فیلترشده نام اکیپ/پیمانکار اجرایی ثبت نشده است."; info.classList.remove("hidden"); wrap.classList.add("hidden"); return; }
+  info.classList.add("hidden"); wrap.classList.remove("hidden");
+  const data = sortBy(Array.from(m,([g,s])=>({group:g,crew:s.size})), [[x=>x.crew,"asc"],[x=>x.group,"asc"]]), rev=[...data].reverse();
+  setWrapHeight("wrap10", regionalHeight(C));
+  setChart("c10","chart10",{type:"bar",
+    data:{labels:rev.map(d=>d.group),datasets:[{label:"تعداد اکیپ",data:rev.map(d=>d.crew),backgroundColor:"#0891B2",borderRadius:6}]},
+    options:{...baseOptions(true),plugins:{legend:{display:false},tooltip:{rtl:true}},
+      scales:{x:{ticks:{...fontTick(),stepSize:1},grid:{color:lineColor()},beginAtZero:true,title:{display:true,text:"تعداد اکیپ اجرایی یکتا",font:{family:"Vazirmatn"},color:inkColor()}},y:{ticks:fontTick(),grid:{display:false}}}}});
+}
+function renderChart07(C){
+  const data = [...C.affairSummary].sort((a,b)=>a.open-b.open), rev=[...data].reverse();
+  setWrapHeight("wrap07", regionalHeight(C));
+  setChart("c07","chart07",{type:"bar",
+    data:{labels:rev.map(d=>d.group),datasets:[{label:"باز",data:rev.map(d=>d.open),backgroundColor:"#F59E0B",borderRadius:6,showZero:true}]},
+    options:{...baseOptions(true),plugins:{legend:{display:false},tooltip:{rtl:true}}}});
+}
+function renderChart01(C){
+  const S = C.regionSummary;
+  setChart("c01","chart01",{type:"bar",
+    data:{labels:S.map(d=>d.group),datasets:[
+      {label:"ثبت شده",data:S.map(d=>d.total),backgroundColor:"#7C6FE8",borderRadius:6,showZero:true},
+      {label:"پایان یافته",data:S.map(d=>d.completed),backgroundColor:"#14B8A6",borderRadius:6,showZero:true}]},
+    options:{...baseOptions(false)}});
+}
+function renderChart13(C){
+  const S = C.regionSummary;
+  setChart("c13","chart13",{type:"doughnut",
+    data:{labels:S.map(d=>d.group),datasets:[{data:S.map(d=>d.total),backgroundColor:S.map(d=>quadrantColor(d.group)),borderColor:surfaceColor(),borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"58%",
+      plugins:{legend:donutLegend(),centerText:{text:fmt(C.m.total),sub:"دستورکار"},
+        tooltip:{rtl:true,callbacks:{label:(c)=>`${c.label}: ${fmt(c.parsed)} دستورکار (${fmtPct(c.parsed/C.m.total*100)})`}}}}});
+}
+function renderChart11(C){
+  const data = [...C.regionSummary].sort((a,b)=>b.avg-a.avg);
+  setChart("c11","chart11",{type:"bar",
+    data:{labels:data.map(d=>d.group),datasets:[{label:"متوسط دستورکار در روز",data:data.map(d=>d.avg),backgroundColor:"#3B82F6",borderRadius:6,labelFmt:v=>fmtFixed(v,1),showZero:true}]},
+    options:{...baseOptions(false),plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{label:(c)=>fmt(c.parsed.y,2)}}}}});
+}
+function renderChart12(C){
+  const th = C.alertThreshold, data = [...C.regionSummary].sort((a,b)=>b.rate-a.rate);
+  setChart("c12","chart12",{type:"bar",
+    data:{labels:data.map(d=>d.group),datasets:[{label:"نرخ پایان (%)",data:data.map(d=>d.rate),backgroundColor:"#22C55E",borderRadius:6,labelFmt:v=>fmtPct(v),showZero:true}]},
+    options:{...baseOptions(false),plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{label:(c)=>fmtPct(c.parsed.y)}}},
+      scales:{x:{ticks:fontTick(),grid:{display:false}},y:{ticks:{...fontTick(),callback:v=>v+"%"},grid:{color:lineColor()},beginAtZero:true,max:100}}},
+    plugins:[hLine("thr12","y",th,"#DC2626",`حد هشدار ${fmt(th)}%`)]});
+}
+function renderChart14(C){
+  const S = C.caseSummary;
+  setChart("c14","chart14",{type:"doughnut",
+    data:{labels:S.map(d=>d.group),datasets:[{data:S.map(d=>d.total),backgroundColor:CASE_COLORS.slice(0,S.length).concat(S.length>CASE_COLORS.length?Array(S.length-CASE_COLORS.length).fill("#94A3B8"):[]),borderColor:surfaceColor(),borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"56%",
+      plugins:{legend:donutLegend(),tooltip:{rtl:true,callbacks:{label:(c)=>`${c.label}: ${fmt(c.parsed)} دستورکار (${fmtPct(c.parsed/C.m.total*100)})`}}}}});
+}
+function renderChart15(C){
+  const S = C.caseSummary, rev=[...S].reverse();
+  setWrapHeight("wrap15", Math.max(430, 110+S.length*48));
+  setChart("c15","chart15",{type:"bar",
+    data:{labels:rev.map(d=>d.group),datasets:[
+      {label:"پایان یافته",data:rev.map(d=>d.completed),backgroundColor:"#14B8A6",borderRadius:6,showZero:true},
+      {label:"ثبت شده",data:rev.map(d=>d.total),backgroundColor:"#7C6FE8",borderRadius:6,showZero:true}]},
+    options:{...baseOptions(true)}});
+}
+
+/* ============================================================
+   بخش ۷: نمودارهای «تحلیل عیوب» (فقط فایل پروژه‌های تعمیراتی)
+   ============================================================ */
+function validDefectRows(prj){ return prj.filter(r=>validDefectOf(r)!==null); }
+function areaSummaryOf(valid){
+  const m = new Map();
+  valid.forEach(r=>{ const k=r.affair||"بدون منطقه"; if(!m.has(k)) m.set(k,[]); m.get(k).push(r.defect); });
+  return Array.from(m,([area,vals])=>({area,total:vals.reduce((a,b)=>a+b,0),mean:meanOf(vals),median:medianOf(vals),count:vals.length}))
+    .sort((a,b)=>cmpStr(a.area,b.area));
+}
+const WaterfallLabelsPlugin = {
+  id:"waterfallLabels",
+  afterDatasetsDraw(chart){
+    const o = chart.options.plugins && chart.options.plugins.waterfallLabels; if(!o || !o.counts) return;
+    const meta = chart.getDatasetMeta(0), ctx = chart.ctx;
+    ctx.save(); ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="700 12px Vazirmatn, Tahoma, sans-serif"; ctx.fillStyle = inkColor();
+    ctx.strokeStyle = "#C7CBD8"; ctx.lineWidth = 1.3;
+    meta.data.forEach((bar,i)=>{
+      ctx.fillText(fmt(o.counts[i]), bar.x, Math.min(bar.y,bar.base)-5);
+      if(i<meta.data.length-1){
+        const nxt = meta.data[i+1], yLvl = chart.scales.y.getPixelForValue(o.ends[i]);
+        ctx.beginPath(); ctx.moveTo(bar.x+bar.width/2, yLvl); ctx.lineTo(nxt.x-nxt.width/2, yLvl); ctx.stroke();
+      }
+    });
+    ctx.restore();
+  }
+};
+Chart.register(WaterfallLabelsPlugin);
+function renderChart19(C, valid){
+  const bins = [-0.001,0,1,2,5,10,20,50,100,Infinity];
+  const labels = ["0","1","2","3-5","6-10","11-20","21-50","51-100","بیش از 100"];
+  const counts = new Array(labels.length).fill(0);
+  valid.forEach(r=>{ for(let i=0;i<bins.length-1;i++){ if(r.defect>bins[i] && r.defect<=bins[i+1]){ counts[i]++; break; } } });
+  const total = counts.reduce((a,b)=>a+b,0);
+  const starts=[], ends=[]; let cum = 0;
+  counts.forEach(c=>{ starts.push(cum); cum += c; ends.push(cum); });
+  starts.push(0); ends.push(total);
+  const lbls = [...labels,"جمع کل"], allCounts = [...counts,total];
+  setChart("c19","chart19",{type:"bar",
+    data:{labels:lbls,datasets:[{label:"تعداد دستورکار",data:lbls.map((_,i)=>[starts[i],ends[i]]),backgroundColor:lbls.map((_,i)=>i===lbls.length-1?"#14B8A6":"#7C6FE8"),borderRadius:4,borderSkipped:false,noLabels:true,barPercentage:0.78}]},
+    options:{...baseOptions(false),layout:{padding:{top:30,right:12,left:4,bottom:4}},
+      plugins:{legend:{display:false},waterfallLabels:{counts:allCounts,ends},
+        tooltip:{rtl:true,callbacks:{label:(c)=>`تعداد دستورکار: ${fmt(allCounts[c.dataIndex])}`,title:(i)=>`بازه تعداد عیب: ${i[0].label}`}}},
+      scales:{x:{ticks:{...fontTick(10),maxRotation:30,minRotation:28},grid:{display:false}},y:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true,max:Math.max(1,total*1.14)}}}});
+}
+function renderChart23(C, valid){
+  const m = new Map();
+  valid.forEach(r=>{ const k=r.region||"تعریف‌نشده"; m.set(k,(m.get(k)||0)+r.defect); });
+  const rows = Array.from(m,([region,total])=>({region,total})).sort((a,b)=>b.total-a.total);
+  const total = rows.reduce((a,b)=>a+b.total,0);
+  setChart("c23","chart23",{type:"doughnut",
+    data:{labels:rows.map(d=>d.region),datasets:[{data:rows.map(d=>d.total),backgroundColor:rows.map(d=>quadrantColor(d.region)),borderColor:surfaceColor(),borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"58%",
+      plugins:{legend:donutLegend(),centerText:{text:fmt(total),sub:"عیب"},
+        tooltip:{rtl:true,callbacks:{label:(c)=>`${c.label}: ${fmt(c.parsed)} عیب (${fmtPct(total?c.parsed/total*100:0)})`}}}}});
+}
+const MatrixPlugin = {
+  id:"matrixDecor",
+  afterDatasetsDraw(chart){
+    const o = chart.options.plugins && chart.options.plugins.matrixDecor; if(!o || !o.names || !chart.scales.x || !chart.scales.y) return;
+    const ctx = chart.ctx, a = chart.chartArea, xs = chart.scales.x, ys = chart.scales.y;
+    ctx.save();
+    ctx.strokeStyle = "#8792A6"; ctx.lineWidth = 1.5; ctx.setLineDash([6,4]);
+    const mx = xs.getPixelForValue(o.meanX), my = ys.getPixelForValue(o.meanY);
+    ctx.beginPath(); ctx.moveTo(mx,a.top); ctx.lineTo(mx,a.bottom); ctx.moveTo(a.left,my); ctx.lineTo(a.right,my); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = cssVar("--muted")||"#8792A6"; ctx.font = "600 11px Vazirmatn, Tahoma, sans-serif";
+    ctx.textAlign="left"; ctx.textBaseline="top"; ctx.fillText("میانگین دستورکار", mx+5, a.top+3);
+    ctx.textAlign="right"; ctx.textBaseline="bottom"; ctx.fillText("میانگین عیب", a.right-4, my-3);
+    ctx.fillStyle = inkColor(); ctx.font = "700 11px Vazirmatn, Tahoma, sans-serif"; ctx.textAlign="center"; ctx.textBaseline="bottom";
+    chart.getDatasetMeta(0).data.forEach((pt,i)=>{ ctx.fillText(o.names[i], pt.x, pt.y-10); });
+    ctx.restore();
+  }
+};
+Chart.register(MatrixPlugin);
+function renderMatrix(C, area){
+  const pts = area.map(a=>({x:a.count,y:a.total}));
+  const meanX = meanOf(area.map(a=>a.count)), meanY = meanOf(area.map(a=>a.total));
+  setChart("cm","chartMatrix",{type:"scatter",
+    data:{datasets:[{label:"منطقه",data:pts,backgroundColor:"rgba(124,111,232,.85)",borderColor:"#FFFFFF",borderWidth:1.5,pointRadius:7,pointHoverRadius:9,noLabels:true}]},
+    options:{...baseOptions(false),layout:{padding:{top:34,right:40,left:10,bottom:6}},
+      plugins:{legend:{display:false},matrixDecor:{meanX,meanY,names:area.map(a=>a.area)},
+        tooltip:{rtl:true,callbacks:{title:(i)=>area[i[0].dataIndex].area,
+          label:(c)=>{ const a=area[c.dataIndex]; return [`تعداد دستورکار: ${fmt(a.count)}`,`تعداد کل عیب: ${fmt(a.total)}`,`متوسط عیب: ${fmt(a.mean,2)}`,`میانه عیب: ${fmt(a.median,1)}`]; }}}},
+      scales:{x:{type:"linear",ticks:{...fontTick(),precision:0},grid:{color:lineColor()},beginAtZero:true,grace:"6%",title:{display:true,text:"تعداد دستورکارهای ابلاغ‌شده",font:{family:"Vazirmatn"},color:inkColor()}},
+              y:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true,grace:"8%",title:{display:true,text:"حجم کل عیوب ثبت‌شده",font:{family:"Vazirmatn"},color:inkColor()}}}}});
+}
+function renderChart21(C, area){
+  const data = [...area].sort((a,b)=>b.total-a.total);
+  setChart("c21","chart21",{type:"bar",
+    data:{labels:data.map(d=>d.area),datasets:[{label:"تعداد کل عیب",data:data.map(d=>d.total),backgroundColor:"#14B8A6",borderRadius:6,labelFmt:v=>fmt(v),showZero:true}]},
+    options:{...baseOptions(false),plugins:{legend:{display:false},tooltip:{rtl:true}},
+      scales:{x:{...rotatedX(11)},y:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true,title:{display:true,text:"تعداد کل عیب",font:{family:"Vazirmatn"},color:inkColor()}}}}});
+}
+function renderChart22(C, area){
+  setChart("c22","chart22",{type:"bar",
+    data:{labels:area.map(d=>d.area),datasets:[
+      {label:"متوسط عیب",data:area.map(d=>d.mean),backgroundColor:"#7C6FE8",borderRadius:6,labelFmt:v=>fmtFixed(v,1),showZero:true},
+      {label:"میانه عیب",data:area.map(d=>d.median),backgroundColor:"#14B8A6",borderRadius:6,labelFmt:v=>fmtFixed(v,1),showZero:true}]},
+    options:{...baseOptions(false),scales:{x:{...rotatedX(11)},y:{ticks:fontTick(),grid:{color:lineColor()},beginAtZero:true,title:{display:true,text:"تعداد عیب در هر دستورکار",font:{family:"Vazirmatn"},color:inkColor()}}}}});
+}
+function p90Label(p){ return Number.isInteger(p) ? fmt(p) : fmt(p,1); }
+function renderChart24(C){
+  const risk = C.risk;
+  const plot = sortBy(risk.rows, [[r=>r.highRate,"asc"],[r=>r.high,"asc"]]), rev=[...plot].reverse();
+  const totEl = risk.rows.reduce((s,r)=>s+r.eligible,0), totHi = risk.rows.reduce((s,r)=>s+r.high,0);
+  const org = totEl ? totHi/totEl*100 : 0;
+  setWrapHeight("wrap24", Math.max(520, 150+plot.length*25));
+  setChart("c24","chart24",{type:"bar",
+    data:{labels:rev.map(d=>d.region),datasets:[{label:"نرخ پرعیب (%)",data:rev.map(d=>d.highRate),backgroundColor:"#DC2626",borderRadius:6,labelFmt:v=>fmtPct(v),showZero:true}]},
+    options:{...baseOptions(true),plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{
+        label:(c)=>`نرخ پرعیب از کل ابلاغ‌شده: ${fmtPct(c.parsed.x)}`,
+        afterLabel:(c)=>{ const d=rev[c.dataIndex]; return [`دستورکار پرعیب: ${fmt(d.high)}`,`کل دستورکار ابلاغ‌شده: ${fmt(d.eligible)}`,`دارای ثبت تعداد عیب: ${fmt(d.covered)}`,`بدون ثبت تعداد عیب: ${fmt(d.missing)}`,`آستانه فعلی P90: ≥ ${p90Label(risk.p90)} عیب`]; }}}},
+      scales:{x:{ticks:{...fontTick(),callback:v=>v+"%"},grid:{color:lineColor()},beginAtZero:true,suggestedMax:Math.max(1,maxOf(plot.map(r=>r.highRate))*1.18)},y:{ticks:fontTick(),grid:{display:false}}}},
+    plugins:[hLine("org24","x",org,"#8792A6",`کل سازمان ${fmtPct(org)}`,"right")]});
+  $("chart24Cap").textContent = `آستانه پویا در بازه فعلی: P90 = ${p90Label(risk.p90)} عیب. این مقدار با تغییر داده یا فیلترها دوباره محاسبه می‌شود.`;
+}
+function renderChart25(C){
+  const plot = sortBy(C.risk.rows, [[r=>r.missing,"asc"],[r=>r.eligible,"asc"]]), rev=[...plot].reverse();
+  const mx = Math.max(0, maxOf(plot.map(r=>r.missing)));
+  setWrapHeight("wrap25", Math.max(520, 150+plot.length*25));
+  setChart("c25","chart25",{type:"bar",
+    data:{labels:rev.map(d=>d.region),datasets:[{label:"بدون ثبت تعداد عیب",data:rev.map(d=>d.missing),backgroundColor:"#DC2626",borderRadius:6,labelFmt:v=>fmt(v),showZero:true}]},
+    options:{...baseOptions(true),plugins:{legend:{display:false},tooltip:{rtl:true,callbacks:{
+        label:(c)=>`بدون ثبت تعداد عیب: ${fmt(c.parsed.x)}`,
+        afterLabel:(c)=>{ const d=rev[c.dataIndex]; return [`کل دستورکار ابلاغ‌شده: ${fmt(d.eligible)}`,`دارای ثبت تعداد عیب: ${fmt(d.covered)}`]; }}}},
+      scales:{x:{ticks:{...fontTick(),precision:0},grid:{color:lineColor()},beginAtZero:true,suggestedMax:Math.max(1,mx*1.42)},y:{ticks:fontTick(),grid:{display:false}}}}});
+}
+function renderChart26(C){
+  const {rows, info} = C.remain, Q = C.Q;
+  const box = $("chart26Info"), body = $("chart26Body");
+  destroyChart("c26");
+  const showInfo = (t)=>{ box.textContent=t; box.classList.remove("hidden"); body.classList.add("hidden"); };
+  if(!Q.cols.remaining_time) return showInfo("ستون «زمان باقی مانده» در فایل پروژه‌های تعمیراتی شناسایی نشد.");
+  if(info.noStage) return showInfo("ستون «مرحله فعلی» در فایل پروژه‌ها شناسایی نشد؛ بدون آن نمی‌توان دستورکارهای «پایان» و «تعریف دستورکار» را کنار گذاشت.");
+  if(!rows.length) return showInfo("دستورکار دارای «زمان باقی مانده» معتبر (خارج از مراحل «پایان» و «تعریف دستورکار») در بازه فعلی وجود ندارد.");
+  box.classList.add("hidden"); body.classList.remove("hidden");
+  const totalCalc = info.overdue + info.onTime;
+  const orgOver = info.overdue/totalCalc*100, orgOk = 100-orgOver;
+  const wAvg = rows.reduce((s,r)=>s+r.avgDelay*r.overdue,0)/Math.max(1,info.overdue);
+  const plot = sortBy(rows, [[r=>r.overdueRate,"asc"],[r=>r.overdue,"asc"]]);
+  plot.push({region:"کل سازمان",overdue:info.overdue,onTime:info.onTime,calc:totalCalc,overdueRate:orgOver,onTimeRate:orgOk,blank:info.blank,avgDelay:wAvg});
+  const rev = [...plot].reverse();      // آخرین ردیف (کل سازمان) بالای نمودار
+  setWrapHeight("wrap26", Math.max(520, 150+plot.length*26));
+  setChart("c26","chart26",{type:"bar",
+    data:{labels:rev.map(d=>d.region),datasets:[
+      {label:"گذشته از موعد",data:rev.map(d=>d.overdueRate),backgroundColor:"#DC2626",borderRadius:4,stack:"s",labelFmt:v=>Math.round(v)+"%",labelMin:4},
+      {label:"در مهلت",data:rev.map(d=>d.onTimeRate),backgroundColor:"#16A34A",borderRadius:4,stack:"s",labelFmt:v=>Math.round(v)+"%",labelMin:4}]},
+    options:{...baseOptions(true),layout:{padding:{top:22,right:16,left:4,bottom:4}},
+      plugins:{legend:{labels:{font:{family:"Vazirmatn"},color:inkColor()}},
+        tooltip:{rtl:true,callbacks:{label:(c)=>`${c.dataset.label}: ${fmtPct(c.parsed.x)}`,
+          afterBody:(items)=>{ const d=rev[items[0].dataIndex]; return [`گذشته از موعد: ${fmt(d.overdue)}`,`در مهلت: ${fmt(d.onTime)}`,`کل محاسبه‌شده: ${fmt(d.calc)}`,`متوسط تأخیر دستورکارهای گذشته: ${fmt(d.avgDelay,1)} روز`,`خالی و کنار گذاشته‌شده: ${fmt(d.blank)}`]; }}}},
+      scales:{x:{stacked:true,ticks:{...fontTick(),callback:v=>v+"%"},grid:{color:lineColor()},beginAtZero:true,max:100},y:{stacked:true,ticks:fontTick(),grid:{display:false}}}}});
+  $("chart26Cap").textContent = `محاسبه روی ${fmt(totalCalc)} دستورکار: ${fmt(info.overdue)} گذشته از موعد (قرمز، زمان باقی‌مانده منفی) و ${fmt(info.onTime)} در مهلت (سبز، صفر یا مثبت). ${fmt(info.excludedStage)} دستورکار در مرحله «پایان» یا «تعریف دستورکار» و ${fmt(info.blank)} دستورکار با زمان باقی‌مانده خالی از محاسبه کنار گذاشته شد. واحد: روز.`;
+}
+
+/* ============================================================
+   بخش ۸: رندر رابط (KPI، کارت‌ها، جدول‌ها، هشدارها)
+   ============================================================ */
+function kpiCardHtml(d){
+  return `<div class="kpi-card"><div class="kpi-ring" style="--pct:${Math.max(0,Math.min(100,d.pct)).toFixed(1)};--ring-color:${d.color}"><div class="kpi-ring-inner"><span class="kpi-value">${d.value}</span></div></div><div class="kpi-label">${d.label}</div><div class="kpi-sub">${d.sub}</div></div>`;
+}
+function renderKPIs(C){
+  const m = C.m, openPct = m.total ? m.open/m.total*100 : 0;
+  const defs = [
+    {label:"کل دستورکارها",value:fmt(m.total),sub:"بر اساس تاریخ زمانبندی اجرا",pct:100,color:"#7C6FE8"},
+    {label:"تعداد دستورکارهای پایان یافته",value:fmt(m.completed),sub:"دستورکارهای مختومه در بازه",pct:m.rate,color:"#22C55E"},
+    {label:"دستورکارهای باز",value:fmt(m.open),sub:`${fmtPct(openPct)} از کل دستورکارها`,pct:openPct,color:"#F43F5E"},
+    {label:"نرخ دستورکارهای پایان یافته",value:fmtPct(m.rate),sub:"سهم پایان‌یافته از کل",pct:m.rate,color:"#14B8A6"},
+    {label:"متوسط دستورکارهای روزانه",value:fmtFixed(m.avg,1),sub:`بر مبنای ${fmt(C.reportDays)} روز گزارش`,pct:100,color:"#3B82F6"}
+  ];
+  $("kpiGrid").innerHTML = defs.map(kpiCardHtml).join("");
+}
+function renderFstrips(C){
+  const parts = [`<span class="badge badge-gray">بازه: ${fmt(C.reportDays)} روز</span>`];
+  if(C.regionsFilter) parts.push(`<span class="badge badge-blue">معاونت: ${fmt(C.regionsFilter.length)} انتخاب</span>`);
+  if(C.affairsFilter) parts.push(`<span class="badge badge-blue">مناطق: ${fmt(C.affairsFilter.length)} انتخاب</span>`);
+  if(C.stagesFilter) parts.push(`<span class="badge badge-orange">مرحله: ${fmt(C.stagesFilter.length)} انتخاب</span>`);
+  if(parts.length===1) parts.push(`<span class="badge badge-green">همه داده‌ها</span>`);
+  const P = C.P;
+  const strip = `<div class="status-strip">
+    <div class="status-item"><b>فایل:</b> ${escapeHtml(P.fileName)}</div>
+    <div class="status-item"><b>شیت:</b> ${escapeHtml(P.sheetName)}</div>
+    <div class="status-item"><b>ردیف معتبر:</b> ${fmt(P.rows.length)}</div>
+    <div class="status-item"><b>آخرین بارگذاری:</b> ${escapeHtml(STATE.loadedAt||"")}</div></div>`;
+  document.querySelectorAll("[data-fstrip]").forEach(el=>{ el.innerHTML = parts.join(" ") + strip; });
+}
+function focusCard(kind, label, name, detail){
+  return `<div class="focus-card focus-${kind}"><div class="focus-label">${label}</div><div class="focus-value">${escapeHtml(name)}</div><div class="focus-detail">${detail}</div></div>`;
+}
+function renderFocus(C){
+  const A = C.affairSummary, R = C.regionSummary;
+  const first = (arr, keys)=> arr.length ? sortBy(arr, keys)[0] : null;
+  const lowTot = (g)=>[[x=>x.total,"asc"],[x=>x.rate,"asc"],[x=>x.group,"asc"]];
+  const lowAvg = ()=>[[x=>x.avg,"asc"],[x=>x.total,"asc"],[x=>x.group,"asc"]];
+  const hiTot = ()=>[[x=>x.total,"desc"],[x=>x.rate,"desc"],[x=>x.group,"asc"]];
+  const hiAvg = ()=>[[x=>x.avg,"desc"],[x=>x.total,"desc"],[x=>x.group,"asc"]];
+  const hiRate = ()=>[[x=>x.rate,"desc"],[x=>x.total,"desc"],[x=>x.group,"asc"]];
+  const lowRate = ()=>[[x=>x.rate,"asc"],[x=>x.total,"desc"]];
+  const cards = {low:[], high:[]};
+  const add = (list, kind, label, row, fn)=>{ if(row) list.push(focusCard(kind,label,row.group,fn(row))); };
+  const dRate = (r)=>`${fmtPct(r.rate)} | ${fmt(r.total)} کل`;
+  const dTot = (r)=>`${fmt(r.total)} دستورکار | نرخ پایان ${fmtPct(r.rate)}`;
+  const dAvg = (r)=>`${fmtFixed(r.avg,2)} دستورکار در روز | ${fmt(r.total)} کل`;
+  add(cards.low,"low","منطقه — کمترین نرخ دستورکار پایان یافته", first(A,lowRate()), dRate);
+  add(cards.low,"low","منطقه — کمترین تعداد دستورکار", first(A,lowTot()), dTot);
+  add(cards.low,"low","منطقه — کمترین متوسط دستورکار روزانه", first(A,lowAvg()), dAvg);
+  add(cards.low,"low","معاونت — کمترین نرخ دستورکار پایان یافته", first(R,lowRate()), dRate);
+  add(cards.low,"low","معاونت — کمترین تعداد دستورکار", first(R,lowTot()), dTot);
+  add(cards.low,"low","معاونت — کمترین متوسط دستورکار روزانه", first(R,lowAvg()), dAvg);
+  add(cards.high,"high","منطقه — بیشترین نرخ دستورکار پایان یافته", first(A,hiRate()), dRate);
+  add(cards.high,"high","منطقه — بیشترین تعداد دستورکار", first(A,hiTot()), dTot);
+  add(cards.high,"high","منطقه — بیشترین متوسط دستورکار روزانه", first(A,hiAvg()), dAvg);
+  add(cards.high,"high","معاونت — بیشترین نرخ دستورکار پایان یافته", first(R,hiRate()), dRate);
+  add(cards.high,"high","معاونت — بیشترین تعداد دستورکار", first(R,hiTot()), dTot);
+  add(cards.high,"high","معاونت — بیشترین متوسط دستورکار روزانه", first(R,hiAvg()), dAvg);
+  $("focusHigh").innerHTML = cards.high.join(""); $("focusLow").innerHTML = cards.low.join("");
+}
+function renderAlerts(C){
+  const th = C.alertThreshold;
+  const att = sortBy(C.affairSummary.filter(d=>d.rate<th && d.total>0), [[d=>d.rate,"asc"],[d=>d.open,"desc"]]).slice(0,4);
+  const openAtt = sortBy(C.affairSummary.filter(d=>d.total>0).map(d=>({...d,openRate:roundHalfEven(d.open/d.total*100,1)})), [[d=>d.openRate,"desc"],[d=>d.open,"desc"]]).slice(0,4);
+  $("alertLow").innerHTML = att.length===0
+    ? `<div class="ok-box">هیچ منطقه‌ای زیر حد ${fmt(th)}% نیست.</div>`
+    : att.map(d=>`<div class="alert-card red"><div class="alert-title">${escapeHtml(d.group)}</div><div class="alert-detail">نرخ پایان ${fmtPct(d.rate)} | ${fmt(d.open)} دستورکار باز</div></div>`).join("");
+  $("alertOpen").innerHTML = openAtt.length===0
+    ? `<div class="ok-box">داده‌ای برای محاسبه نرخ دستورکار باز وجود ندارد.</div>`
+    : openAtt.map(d=>`<div class="alert-card orange"><div class="alert-title">${escapeHtml(d.group)}</div><div class="alert-detail">نرخ باز ${fmtPct(d.openRate)} | ${fmt(d.open)} باز از ${fmt(d.total)} کل</div></div>`).join("");
+}
+function renderRegionCards(C){
+  $("regionCards").innerHTML = C.regionSummary.map(r=>`
+    <div class="region-card" style="--quadrant:${quadrantColor(r.group)}">
+      <div class="region-name">${escapeHtml(r.group)}</div>
+      <div class="region-line"><span>تعداد کل دستورکارها</span><b>${fmt(r.total)}</b></div>
+      <div class="region-line"><span>تعداد دستورکار پایان یافته</span><b>${fmt(r.completed)}</b></div>
+      <div class="region-line"><span>تعداد دستورکارهای باز</span><b>${fmt(r.open)}</b></div>
+      <div class="region-line"><span>نرخ دستورکارهای پایان یافته</span><b>${fmtPct(r.rate)}</b></div>
+    </div>`).join("");
+}
+function buildTable(tableId, headers, rows){
+  const table = $(tableId);
+  table.querySelector("thead").innerHTML = "<tr>"+headers.map(h=>`<th>${h}</th>`).join("")+"</tr>";
+  if(!rows.length){ table.querySelector("tbody").innerHTML = `<tr><td colspan="${headers.length}" class="empty-msg">داده‌ای نیست.</td></tr>`; return; }
+  table.querySelector("tbody").innerHTML = rows.map(r=>{
+    const cells = Array.isArray(r) ? r : r.cells, cls = Array.isArray(r) ? "" : (r.cls||"");
+    return `<tr class="${cls}">`+cells.map(c=>`<td>${c}</td>`).join("")+"</tr>";
+  }).join("");
+}
+function rankTable(tableId, groupLabel, rk){
+  const headers = ["رتبه نهایی",groupLabel,"کل دستورکارها","رتبه کل دستورکارها","دستورکار پایان یافته","رتبه پایان یافته","تعداد اکیپ","دستورکار روزانه هر اکیپ","رتبه دستورکار روزانه هر اکیپ","امتیاز رتبه‌ای"];
+  buildTable(tableId, headers, rk.rows.map(r=>[fmt(r.finalRank),escapeHtml(r.group),fmt(r.total),fmt(r.rankTotal),fmt(r.completed),fmt(r.rankCompleted),fmt(r.crew),
+    r.daily===null?"—":fmtFixed(r.daily,2), r.rankDaily===null?"—":fmt(r.rankDaily), fmtFixed(r.score,2)]));
+}
+function renderRankings(C){
+  const mk = (label, rk)=> ({
+    n: rk.crewAvail ? 3 : 2,
+    note: rk.crewAvail
+      ? `رتبه نهایی ${label} با وزن مساوی برای سه شاخص «کل دستورکارها»، «دستورکار پایان یافته» و «دستورکار روزانه هر اکیپ» محاسبه می‌شود؛ وزن هر شاخص ۳۳٫۳۳٪ است.`
+      : `ستون اکیپ/پیمانکار داده قابل استفاده ندارد؛ رتبه نهایی ${label} فقط با دو شاخص «کل دستورکارها» و «دستورکار پایان یافته» و وزن مساوی ۵۰٪ محاسبه می‌شود.`});
+  const a = mk("مناطق", C.areaRank), d = mk("معاونت‌ها", C.deputyRank);
+  $("affairRankNote").textContent = a.note + " رتبه ۱ بهترین عملکرد را نشان می‌دهد و هرچه امتیاز رتبه‌ای بیشتر باشد، عملکرد بهتر است.";
+  $("affairRankTitle").textContent = `جدول رتبه‌بندی مناطق بر اساس ${fmt(a.n)} شاخص اصلی`;
+  $("regionRankNote").textContent = d.note + " رتبه ۱ بهترین عملکرد را نشان می‌دهد و هرچه امتیاز رتبه‌ای بیشتر باشد، عملکرد بهتر است.";
+  $("regionRankTitle").textContent = `جدول رتبه‌بندی معاونت‌ها بر اساس ${fmt(d.n)} شاخص اصلی`;
+  rankTable("tableAffairs","منطقه",C.areaRank);
+  rankTable("tableRegions","معاونت",C.deputyRank);
+}
+function renderCaseTab(C){
+  const info = $("caseInfo"), body = $("caseBody");
+  destroyChart("c14"); destroyChart("c15");
+  if(!C.hasCase){ info.textContent="ستون «نوع پرونده» در فایل بارگذاری‌شده شناسایی نشد؛ بنابراین تحلیل نوع پرونده قابل نمایش نیست."; info.classList.remove("hidden"); body.classList.add("hidden"); return; }
+  if(!C.caseSummary.length){ info.textContent="در محدوده فیلتر فعلی داده‌ای برای نوع پرونده وجود ندارد."; info.classList.remove("hidden"); body.classList.add("hidden"); return; }
+  info.classList.add("hidden"); body.classList.remove("hidden");
+  renderChart14(C); renderChart15(C);
+  const rows = sortBy(C.caseSummary, [[r=>r.total,"desc"],[r=>r.rate,"desc"]]);
+  buildTable("tableCase", ["نوع پرونده","کل دستورکارها","پایان‌یافته","باز","نرخ پایان","متوسط روزانه"],
+    rows.map(r=>[escapeHtml(r.group),fmt(r.total),fmt(r.completed),fmt(r.open),fmtPct(r.rate),fmtFixed(roundHalfEven(r.avg,2),2)]));
+}
+
+/* ---------- تب عیوب ---------- */
+const DEFECT_CHART_KEYS = ["c19","c23","cm","c21","c22","c24","c25","c26"];
+function renderDefects(C){
+  const info = $("defectInfo"), body = $("defectBody");
+  const showInfo = (t)=>{ DEFECT_CHART_KEYS.forEach(destroyChart); info.textContent=t; info.classList.remove("hidden"); body.classList.add("hidden"); };
+  if(!C.Q) return showInfo("برای تحلیل عیوب، فایل پروژه‌های تعمیراتی را بارگذاری کنید.");
+  if(!C.Q.cols.defect_count) return showInfo("ستون «تعداد عیب» در فایل پروژه‌های تعمیراتی شناسایی نشد.");
+  info.classList.add("hidden"); body.classList.remove("hidden");
+  const k = C.defKpi, missPct = k.eligible ? k.missing/k.eligible*100 : 0;
+  $("defectKpiGrid").innerHTML = [
+    {label:"تعداد کل عیوب",value:fmt(k.total),sub:"فقط دستورکارهای ابلاغ‌شده داخل بازه",pct:100,color:"#F59E0B"},
+    {label:"متوسط عیب در هر دستورکار",value:fmtFixed(k.average,2),sub:`بر مبنای ${fmt(k.covered)} دستورکار`,pct:100,color:"#D97706"},
+    {label:"میانه عیب در هر دستورکار",value:fmtFixed(k.median,1),sub:"مقدار وسط توزیع تعداد عیب",pct:100,color:"#0EA5E9"},
+    {label:"ابلاغ‌شده بدون ثبت تعداد عیب",value:fmt(k.missing),sub:`از ${fmt(k.eligible)} دستورکار ابلاغ‌شده`,pct:missPct,color:"#DC2626"}
+  ].map(kpiCardHtml).join("");
+  const neg = C.prj.filter(r=>r.defect!==null && r.defect<0).length, nw = $("defectNegWarn");
+  nw.classList.toggle("hidden", !neg);
+  if(neg) nw.textContent = `${fmt(neg)} ردیف مقدار منفی در ستون تعداد عیب دارد و از نمودارهای عیب کنار گذاشته شد.`;
+  const valid = validDefectRows(C.prj);
+  const mgmtEls = [$("mgmtTitle"), $("mgmtInfo"), $("mgmtBody")];
+  if(!valid.length){
+    DEFECT_CHART_KEYS.forEach(destroyChart);
+    $("defectCharts").classList.add("hidden"); mgmtEls.forEach(e=>e.classList.add("hidden"));
+    info.textContent = "در بازه و فیلتر فعلی، دستورکار ابلاغ‌شده‌ای با مقدار معتبر «تعداد عیب» وجود ندارد."; info.classList.remove("hidden");
+    return;
+  }
+  $("defectCharts").classList.remove("hidden"); mgmtEls[0].classList.remove("hidden");
+  renderChart19(C, valid); renderChart23(C, valid);
+  const area = areaSummaryOf(valid);
+  renderMatrix(C, area); renderChart21(C, area); renderChart22(C, area);
+  const hasRisk = C.risk.rows.length>0;
+  $("defectRiskCharts").classList.toggle("hidden", !hasRisk);
+  if(hasRisk){ renderChart24(C); renderChart25(C); } else { destroyChart("c24"); destroyChart("c25"); }
+  renderChart26(C);
+  /* جدول مدیریتی */
+  const mi = $("mgmtInfo"), mb = $("mgmtBody"), g = C.mgmt;
+  if(!g.rows.length){
+    mi.textContent = "برای ساخت جدول مدیریتی، دستورکار دارای تاریخ ابلاغ معتبر و ستون‌های منطقه/تعداد عیب لازم است.";
+    mi.classList.remove("hidden"); mb.classList.add("hidden"); return;
+  }
+  mi.classList.add("hidden"); mb.classList.remove("hidden");
+  $("mgmtCap").textContent = `راهنمای مدیریتی: رتبه بار عیب بر اساس تعداد کل عیب مرتب شده است. در بازه فعلی P90 تعداد عیب = ${p90Label(g.p90)}؛ بنابراین «دستورکار پرعیب (P90)» یعنی دستورکاری با تعداد عیب ≥ ${p90Label(g.p90)}.`;
+  const rowCells = (r, first, dep, aff)=>[first, dep, aff, fmt(Math.round(r.eligible)), fmt(Math.round(r.completed)), fmt(Math.round(r.open)), fmtPct(r.rate),
+    fmt(Math.round(r.defects)), fmtPct(r.share), fmtFixed(r.mean,2), fmtFixed(r.median,1), fmt(Math.round(r.max)), fmt(Math.round(r.high)), fmtPct(r.highRate),
+    fmt(Math.round(r.missing)), fmtPct(r.completeness), fmt(Math.round(r.crews))];
+  const headers = ["رتبه بار عیب","معاونت","منطقه","دستورکار ابلاغ‌شده","پایان‌یافته","باز","نرخ پایان","تعداد کل عیب","سهم از کل عیوب","متوسط عیب/دستورکار","میانه عیب/دستورکار","بیشترین عیب یک دستورکار","دستورکار پرعیب (P90)","نرخ دستورکار پرعیب","بدون ثبت تعداد عیب","کامل بودن ثبت عیب","اکیپ/پیمانکار یکتا"];
+  const rows = g.rows.map(r=>rowCells(r, fmt(r.rank), escapeHtml(r.dep), escapeHtml(r.aff)));
+  rows.push({cls:"total-row", cells: rowCells(g.total, "—", "—", "جمع کل")});
+  buildTable("tableDefect", headers, rows);
+}
+
+/* ---------- تب خروجی ---------- */
+function summaryText(C){
+  const m = C.m, en = (n)=>Number(n).toLocaleString("en-US"), f1 = (n)=>Number(n).toFixed(1);
+  const parts = [`از ${en(m.total)} دستورکار، ${en(m.completed)} مورد پایان یافته و ${en(m.open)} مورد باز است؛ نرخ پایان ${f1(m.rate)}% است.`];
+  const best = C.regionSummary.length ? sortBy(C.regionSummary,[[r=>r.rate,"desc"]])[0] : null;
+  if(best) parts.push(`بهترین نرخ پایان معاونتی متعلق به «${best.group}» با ${f1(best.rate)}% است.`);
+  const mostOpen = C.affairSummary.length ? sortBy(C.affairSummary,[[r=>r.open,"desc"],[r=>r.total,"desc"]])[0] : null;
+  if(mostOpen) parts.push(`بیشترین دستورکار باز در «${mostOpen.group}» با ${en(mostOpen.open)} مورد قرار دارد.`);
+  const top = C.openStages[0];
+  if(top) parts.push(`بیشترین تجمع کار باز در مرحله «${top.stage}» با ${en(top.count)} مورد است.`);
+  return parts.join(" ");
+}
+const EXPORT_VIEW_KEYS = ["work_order","title","stage","date","affair","region","supervisor","contractor","case_type"];
+function exportViewValue(r, key, P){
+  switch(key){
+    case "work_order": return r.workOrder; case "title": return r.title; case "stage": return r.stage;
+    case "date": return r.dateBucket ? (isMissing(r.raw[P.idx.date]) ? "" : String(r.raw[P.idx.date])) : "";
+    case "affair": return r.affair; case "region": return r.region; case "supervisor": return r.supervisor;
+    case "contractor": return r.contractor; case "case_type": return r.caseType;
+  }
+  return "";
+}
+const EXPORT_VIEW_LABEL = {work_order:"شماره دستورکار",title:"عنوان دستورکار",stage:"مرحله فعلی",date:"تاریخ زمانبندی اجرا",affair:"نام امور",region:"معاونت",supervisor:"ناظر",contractor:"پیمانکار/اکیپ اجرایی",case_type:"نوع پرونده"};
+function renderExportTable(C){
+  const P = C.P;
+  const keys = EXPORT_VIEW_KEYS.filter(k=> k==="region" || P.idx[k]>=0);
+  const LIMIT = 1000;
+  buildTable("tableExport", keys.map(k=>EXPORT_VIEW_LABEL[k]), C.filtered.slice(0,LIMIT).map(r=>keys.map(k=>escapeHtml(exportViewValue(r,k,P))||"—")));
+  $("exportCount").textContent = C.filtered.length>LIMIT ? `نمایش ${fmt(LIMIT)} ردیف اول از ${fmt(C.filtered.length)} ردیف (خروجی دانلودی کامل است)` : `${fmt(C.filtered.length)} ردیف`;
+}
+function exportMatrix(C){
+  const P = C.P, skip = new Set([P.idx.region].filter(i=>i>=0));
+  const normIdx = new Set(NORMALIZED_TEXT_KEYS.map(k=>P.idx[k]).filter(i=>i>=0));
+  const cols = P.headers.map((h,i)=>i).filter(i=>!skip.has(i));
+  const head = cols.map(i=>P.headers[i]).concat(["معاونت"]);
+  const rows = C.filtered.map(r=>cols.map(i=>{ const v=r.raw[i]; return isMissing(v) ? "" : (normIdx.has(i) ? normalizeText(v) : v); }).concat([r.region]));
+  return {head, rows};
+}
+function triggerDownload(blob, name){
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function downloadXlsx(){
+  if(!CUR||!CUR.filtered.length) return;
+  const {head, rows} = exportMatrix(CUR);
+  const ws = XLSX.utils.aoa_to_sheet([head,...rows]), wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "داده فیلترشده");
+  XLSX.writeFile(wb, "CMMS_filtered_report.xlsx");
+}
+function downloadCsv(){
+  if(!CUR||!CUR.filtered.length) return;
+  const {head, rows} = exportMatrix(CUR);
+  const q = (v)=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
+  const lines = [head.map(q).join(","), ...rows.map(r=>r.map(q).join(","))];
+  triggerDownload(new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8;"}), "CMMS_filtered_report.csv");
+}
+function downloadSummary(){
+  const C = CUR; if(!C||!C.filtered.length) return;
+  const en = (n)=>Number(n).toLocaleString("en-US");
+  const txt = ["گزارش مدیریتی دستورکارها","========================",
+    `فایل: ${C.P.fileName}`,`شیت: ${C.P.sheetName}`,`بازه گزارش: ${C.reportDays} روز`,"",
+    `کل دستورکارها: ${en(C.m.total)}`,`پایان‌یافته: ${en(C.m.completed)}`,`دستورکارهای باز: ${en(C.m.open)}`,
+    `نرخ پایان: ${C.m.rate.toFixed(1)}%`,`متوسط روزانه: ${C.m.avg.toFixed(1)}`,"","جمع‌بندی:",summaryText(C),""].join("\n");
+  triggerDownload(new Blob(["﻿"+txt],{type:"text/plain;charset=utf-8;"}), "CMMS_management_summary.txt");
+}
+
+/* ============================================================
+   بخش ۹: فیلترهای چندانتخابی، یادداشت‌ها و چرخه رندر
+   ============================================================ */
+const MS = {
+  regions:{id:"ms-regions", all:"همه معاونت‌ها", opts:C=>C.optRegions},
+  affairs:{id:"ms-affairs", all:"همه مناطق", opts:C=>C.optAffairs},
+  stages:{id:"ms-stages", all:"همه مراحل", opts:C=>C.optStages},
+  cases:{id:"ms-cases", all:"همه انواع", opts:C=>C.optCases}
+};
+function renderMs(key, C){
+  const cfg = MS[key], root = $(cfg.id), panel = root.querySelector(".ms-panel");
+  const opts = cfg.opts(C), sel = STATE.sel[key], scroll = panel.scrollTop;
+  panel.innerHTML = (sel.length ? `<button type="button" class="ms-clear" data-clear="1">پاک کردن انتخاب</button>` : "") +
+    (opts.length ? opts.map(o=>`<label class="ms-item"><input type="checkbox" value="${escapeHtml(o)}" ${sel.includes(o)?"checked":""}><span>${escapeHtml(o)}</span></label>`).join("") : `<div class="ms-empty">گزینه‌ای وجود ندارد</div>`);
+  panel.scrollTop = scroll;
+  root.querySelector(".ms-btn span").textContent = !sel.length ? cfg.all : (sel.length<=2 ? sel.join("، ") : `${fmt(sel.length)} انتخاب`);
+}
+function initMs(){
+  Object.keys(MS).forEach(key=>{
+    const root = $(MS[key].id);
+    root.querySelector(".ms-btn").addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const wasOpen = root.classList.contains("open");
+      document.querySelectorAll(".ms.open").forEach(x=>x.classList.remove("open"));
+      if(!wasOpen) root.classList.add("open");
+    });
+    root.querySelector(".ms-panel").addEventListener("click", (e)=>{
+      e.stopPropagation();
+      if(e.target.dataset && e.target.dataset.clear){ STATE.sel[key] = []; applyAll(); }
+    });
+    root.querySelector(".ms-panel").addEventListener("change", (e)=>{
+      const cb = e.target; if(!cb || cb.type!=="checkbox") return;
+      const set = new Set(STATE.sel[key]);
+      if(cb.checked) set.add(cb.value); else set.delete(cb.value);
+      STATE.sel[key] = Array.from(set);
+      applyAll();
+    });
+  });
+  document.addEventListener("click", ()=>document.querySelectorAll(".ms.open").forEach(x=>x.classList.remove("open")));
+}
+function renderNotices(C){
+  const box = $("notices"), items = [];
+  const P = C.P;
+  if(P.unmapped.length) items.push(["warn-box",`معاونت این مناطق تعریف نشده است: ${P.unmapped.map(escapeHtml).join("، ")}. در صورت نیاز جدول نگاشت منطقه↔معاونت را ویرایش کنید.`]);
+  if(!C.dateOptions.length) items.push(["info-box","برای فعال‌شدن فیلتر زمانی، حداقل یکی از تاریخ‌های مرجع شناسایی‌شده در فایل‌ها باید مقدار معتبر داشته باشد."]);
+  if(C.range && C.missingRef) items.push(["info-box",`${fmt(C.missingRef)} ردیف فایل اصلی بدون تاریخ زمان‌بندی معتبر، در تحلیل زمانی فایل اصلی وارد نمی‌شوند.`]);
+  if(C.blankStage) items.push(["info-box",`مرحله فعلی خالی: ${fmt(C.blankStage)} ردیف — در حالت «همه» حفظ می‌شوند.`]);
+  if(STATE.projectsWarn) items.push(["warn-box",escapeHtml(STATE.projectsWarn)]);
+  box.innerHTML = items.map(([c,t])=>`<div class="${c}">${t}</div>`).join("");
+}
+function renderSettingsChips(C){
+  const chip = $("daysChip");
+  if(C.useAuto) chip.textContent = `بازه شناسایی‌شده: ${fmt(C.autoDays)} روز`;
+  else chip.textContent = C.autoDays ? `بازه عملیاتی شناسایی‌شده: ${fmt(C.autoDays)} روز` : "تاریخ معتبر برای تشخیص خودکار وجود ندارد.";
+  $("daysManual").disabled = C.useAuto;
+  $("daysAuto").disabled = !C.hasRef;
+  $("targetChip").textContent = `شاخص هدف هر منطقه: ${fmt(C.periodTarget)} دستورکار (${fmt(C.teams)} اکیپ × ${fmt(C.perTeam)} × ${fmt(C.reportDays)} روز)`;
+  const opts = C.dateOptions;
+  $("rangeHint").textContent = opts.length
+    ? `یک بازه تقویمی روی دو فایل اعمال می‌شود: گزارش زمان‌بندی با «تاریخ زمانبندی اجرا» و پروژه‌های تعمیراتی با «تاریخ ابلاغ به اکیپ اجرا». تاریخ شمسی را کامل و به‌صورت ۱۴۰۵/۰۱/۰۱ وارد کنید.`
+    : "هیچ تاریخ معتبری در فایل‌ها شناسایی نشد؛ فیلتر زمانی غیرفعال است.";
+}
+function setDateDefaults(){
+  const P = STATE.primary; if(!P) return;
+  const m = new Map();
+  P.dateOptions.concat(STATE.projects ? STATE.projects.dateOptions : []).forEach(o=>m.set(o.label,o.day));
+  const arr = Array.from(m, ([label,day])=>({label,day})).sort((a,b)=>a.day-b.day);
+  $("dateFrom").value = arr.length ? arr[0].label : "";
+  $("dateTo").value = arr.length ? arr[arr.length-1].label : "";
+}
+function renderCharts(C){
+  renderChart17(C); renderChart16(C); renderChart18(C);
+  renderChart04(C); renderChart05(C);
+  renderChart06(C); renderChart09(C); renderChart08(C); renderChart10(C); renderChart07(C);
+  renderChart01(C); renderChart13(C); renderChart11(C); renderChart12(C);
+}
+const FATALS = [];
+function showFatals(){
+  const b = $("fatalBox"); if(!b) return;
+  if(typeof Chart==="undefined") FATALS.unshift("کتابخانه Chart.js بارگذاری نشده است (اتصال اینترنت/CDN).");
+  b.textContent = FATALS.join("\n"); b.classList.toggle("hidden", !FATALS.length);
+}
+window.addEventListener("error", (e)=>{ FATALS.push(`${e.message} (خط ${e.lineno})`); try{ showFatals(); }catch(_){} });
+function applyAll(){
+  if(!STATE.primary) return;
+  const C = compute(); CUR = C;
+  Object.keys(MS).forEach(k=>renderMs(k, C.error ? {optRegions:[],optAffairs:[],optStages:[],optCases:[]} : C));
+  $("caseFilterCard").classList.toggle("hidden", !C.hasCase);
+  const es = $("emptyState"), tabs = $("mainTabs");
+  $("heroStatus").textContent = `CMMS // v${VERSION} // ${STATE.loadedAt||""}`;
+  $("footerCap").textContent = `CMMS Management Dashboard v${VERSION} | محاسبات بر اساس داده بارگذاری‌شده و فیلترهای فعال`;
+  if(C.error){
+    es.className = "err-box"; es.textContent = C.error; tabs.classList.add("hidden"); $("notices").innerHTML = "";
+    Object.keys(charts).forEach(destroyChart); return;
+  }
+  renderNotices(C); renderSettingsChips(C);
+  if(!C.filtered.length){
+    es.className = "warn-box"; es.textContent = "با فیلترهای انتخاب‌شده هیچ دستورکاری باقی نمانده است.";
+    tabs.classList.add("hidden"); Object.keys(charts).forEach(destroyChart); return;
+  }
+  es.className = "hidden"; tabs.classList.remove("hidden");
+  FATALS.length = 0;
+  [["KPI",renderKPIs],["نوار وضعیت",renderFstrips],["کارت‌های برجسته",renderFocus],["هشدارها",renderAlerts],["کارت معاونت",renderRegionCards],
+   ["رتبه‌بندی",renderRankings],["نوع پرونده",renderCaseTab],["خروجی",renderExportTable],["نمودارها",renderCharts],["تحلیل عیوب",renderDefects]]
+    .forEach(([name,fn])=>{ try{ fn(C); }catch(err){ console.error(name, err); FATALS.push(`[${name}] ${err && err.stack ? err.stack.split("\n").slice(0,3).join(" | ") : err}`); } });
+  try{
+    const f=$("filtersFold"), sm=$("filtersSummary");
+    const bits=[`${$("dateFrom").value||"…"} تا ${$("dateTo").value||"…"}`];
+    if(C.regionsFilter) bits.push(`معاونت: ${fmt(C.regionsFilter.length)}`);
+    if(C.affairsFilter) bits.push(`منطقه: ${fmt(C.affairsFilter.length)}`);
+    if(C.stagesFilter) bits.push(`مرحله: ${fmt(C.stagesFilter.length)}`);
+    if(sm) sm.textContent = bits.join(" · ");
+  }catch(e){}
+  showFatals();
+  setTimeout(()=>Object.values(charts).forEach(c=>{ try{c.resize();}catch(e){} }), 60);
+}
+
+/* ============================================================
+   بخش ۱۰: بارگذاری فایل‌ها، رویدادها و شروع
+   ============================================================ */
+function nowStamp(){
+  const d = new Date(), p = (n)=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function readWorkbook(file, kind){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      try{
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+        const sheet = detectBestSheet(wb);
+        const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sheet], {header:1, defval:""});
+        resolve(prepareDataset(aoa, kind, file.name, sheet));
+      }catch(err){ reject(err); }
+    };
+    reader.onerror = ()=>reject(new Error("خواندن فایل ممکن نشد."));
+    reader.readAsArrayBuffer(file);
+  });
+}
+function setInfo(id, html, cls){ const el=$(id); el.className = "file-info" + (cls?(" "+cls):""); el.innerHTML = html; }
+function loadPrimary(file){
+  readWorkbook(file,"primary").then(ds=>{
+    STATE.primary = ds; STATE.loadedAt = nowStamp(); STATE.sel = {regions:[],affairs:[],stages:[],cases:[]};
+    setInfo("infoPrimary", `✓ ${escapeHtml(file.name)} — ${fmt(ds.rows.length)} ردیف (شیت: ${escapeHtml(ds.sheetName)})`);
+    $("introBox").classList.add("hidden"); $("appBody").classList.remove("hidden");
+    setDateDefaults(); applyAll();
+  }).catch(err=>{
+    console.error(err);
+    STATE.primary = null; $("appBody").classList.add("hidden"); $("introBox").classList.remove("hidden");
+    setInfo("infoPrimary", `✗ آماده‌سازی داده ممکن نشد: ${escapeHtml(err.message)}`, "err");
+  });
+}
+function loadProjects(file){
+  readWorkbook(file,"projects").then(ds=>{
+    STATE.projects = ds; STATE.projectsWarn = "";
+    setInfo("infoProjects", `✓ ${escapeHtml(file.name)} — ${fmt(ds.rows.length)} ردیف (شیت: ${escapeHtml(ds.sheetName)})`);
+    if(STATE.primary){ setDateDefaults(); applyAll(); }
+  }).catch(err=>{
+    console.error(err);
+    STATE.projects = null; STATE.projectsWarn = `خواندن فایل پروژه‌های تعمیراتی ممکن نشد: ${err.message}؛ ادامه بدون این فایل.`;
+    setInfo("infoProjects", `✗ ${escapeHtml(err.message)}`, "err");
+    if(STATE.primary){ setDateDefaults(); applyAll(); }
+  });
+}
+function initTabs(){
+  const buttons = document.querySelectorAll(".tab-btn");
+  buttons.forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      buttons.forEach(b=>b.classList.remove("active")); btn.classList.add("active");
+      document.querySelectorAll(".tab-panel").forEach(p=>p.classList.add("hidden"));
+      const panel = $("panel-"+btn.dataset.tab); if(panel) panel.classList.remove("hidden");
+      STATE.tab = btn.dataset.tab;
+      setTimeout(()=>Object.values(charts).forEach(c=>{ try{c.resize();}catch(e){} }), 60);
+    });
+  });
+}
+function initEvents(){
+  ["dateFrom","dateTo","daysManual","teamsPerRegion","ordersPerTeam","alertThreshold"].forEach(id=>{
+    $(id).addEventListener("change", applyAll);
+    $(id).addEventListener("keydown", e=>{ if(e.key==="Enter") applyAll(); });
+  });
+  $("daysAuto").addEventListener("change", applyAll);
+  $("resetFilters").addEventListener("click", ()=>{
+    STATE.sel = {regions:[],affairs:[],stages:[],cases:[]};
+    setDateDefaults(); applyAll();
+  });
+  $("filePrimary").addEventListener("change", e=>{ const f=e.target.files[0]; if(f) loadPrimary(f); e.target.value=""; });
+  $("fileProjects").addEventListener("change", e=>{ const f=e.target.files[0]; if(f) loadProjects(f); e.target.value=""; });
+  $("themeBtn").addEventListener("click", ()=>{
+    document.body.classList.toggle("dark");
+    $("themeBtn").textContent = document.body.classList.contains("dark") ? "☀️ حالت روشن" : "🌙 حالت تاریک";
+    applyAll();
+  });
+  $("downloadXlsx").addEventListener("click", downloadXlsx);
+  $("downloadCsv").addEventListener("click", downloadCsv);
+  $("downloadSummary").addEventListener("click", downloadSummary);
+}
+(function init(){
+  initTabs(); initEvents(); initMs();
+  $("heroStatus").textContent = `CMMS // v${VERSION}`;
+})();
+</script>
+</body>
+</html>
